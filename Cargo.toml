@@ -1,0 +1,22 @@
+[package]
+name = "enumoid"
+version = "0.1.0"
+authors = ["Robin KAY <komadori@gekkou.co.uk>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "Enum Indexed Containers"
+readme = "README.md"
+homepage = "https://github.com/komadori/enumoid"
+repository = "https://github.com/komadori/enumoid"
+keywords = ["enum", "flags", "map", "vector"]
+categories = ["data-structures"]
+
+[features]
+default = ["serde"]
+
+[dependencies]
+enumoid_derive = { path = "enumoid_derive" }
+serde = { version = "1.0", optional = true }
+
+[workspace]
+members = ["enumoid_derive"]
