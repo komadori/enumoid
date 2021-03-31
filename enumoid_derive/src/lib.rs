@@ -1,3 +1,14 @@
+//! This crate provides Enumoid's derive macro.
+//!
+//! ```
+//! # use enumoid_derive::Enumoid;
+//! #
+//! #[derive(Enumoid)]
+//! # enum E {}
+//! #
+//! # fn main() {}
+//! ```
+
 extern crate proc_macro;
 extern crate proc_macro2;
 #[macro_use]
