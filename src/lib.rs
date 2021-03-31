@@ -14,3 +14,6 @@ pub use flags::EnumFlags;
 pub use map::EnumMap;
 pub use opt_map::EnumOptionMap;
 pub use vec::EnumVec;
+
+// Re-export derive macro
+pub use enumoid_derive::*;

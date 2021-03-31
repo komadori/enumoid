@@ -1,3 +1,5 @@
+use enumoid::Enumoid;
+
 #[derive(Debug, Enumoid, PartialEq)]
 pub enum Zero {}
 
