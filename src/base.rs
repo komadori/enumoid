@@ -59,6 +59,8 @@ pub trait EnumArrayHelper<V: Sized>: Enumoid {
   fn partial_slice_mut(
     p: &mut Self::PartialArray,
   ) -> &mut [mem::MaybeUninit<V>];
+  /// # Safety
+  /// All the elements in the input array must be initialised.
   unsafe fn partial_to_total(p: Self::PartialArray) -> Self::TotalArray;
 
   fn total_slice(t: &Self::TotalArray) -> &[V];
@@ -71,6 +73,9 @@ pub trait EnumArrayHelper<V: Sized>: Enumoid {
   }
 }
 
+/// Transmute for dependently-sized types.
+/// # Safety
+/// Equivalent to transmute.
 pub unsafe fn unconstrained_transmute<A, B>(a: A) -> B {
   let result = ptr::read(&a as *const A as *const B);
   mem::forget(a);
