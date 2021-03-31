@@ -3,6 +3,7 @@ use std::mem;
 use std::ops::Range;
 use std::ptr;
 
+/// Trait for enumerable types.
 pub trait Enumoid: Sized {
   type CompactSize: Copy;
   const SIZE: usize;

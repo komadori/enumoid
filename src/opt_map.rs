@@ -4,6 +4,7 @@ use crate::flags::EnumFlags;
 use std::mem;
 use std::ptr;
 
+/// A partial map from enumoid `T` to values `V`.
 pub struct EnumOptionMap<T: EnumFlagsHelper + EnumArrayHelper<V>, V> {
   valid: EnumFlags<T>,
   pub(crate) data: T::PartialArray,

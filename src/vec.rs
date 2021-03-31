@@ -11,6 +11,7 @@ use std::mem;
 use std::ops::{Index, IndexMut};
 use std::ptr;
 
+/// A vector of values `V` indexed by enumoid `T`.
 pub struct EnumVec<T: EnumArrayHelper<V>, V> {
   pub(crate) len: T::CompactSize,
   pub(crate) data: T::PartialArray,

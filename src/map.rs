@@ -10,6 +10,7 @@ use std::iter;
 use std::mem;
 use std::ops::{Index, IndexMut};
 
+/// A total map from enumoid `T` to values `V`.
 pub struct EnumMap<T: EnumArrayHelper<V>, V> {
   data: T::TotalArray,
 }

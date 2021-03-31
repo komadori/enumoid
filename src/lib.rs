@@ -1,3 +1,5 @@
+//! This crate is a Rust library which provides containers indexed by enums.
+
 pub mod base;
 mod flags;
 mod iter;

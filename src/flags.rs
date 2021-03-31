@@ -3,6 +3,7 @@ use std::fmt;
 use std::fmt::Debug;
 use std::ops::{Index, Range};
 
+/// A set of enumoid `T`'s members.
 #[derive(Copy, Clone)]
 pub struct EnumFlags<T: EnumFlagsHelper> {
   data: T::FlagsArray,
