@@ -15,8 +15,8 @@ pub fn derive_enumoid(
     let flag_bytes = (elem_count + 7) / 8;
     let sz_type = match elem_count {
       0..=0xff => quote! { u8 },
-      0..=0xffff => quote! { u16 },
-      0..=0xffffffff => quote! { u32 },
+      0x100..=0xffff => quote! { u16 },
+      0x10000..=0xffffffff => quote! { u32 },
       _ => quote! { usize },
     };
     let variant_names: Vec<&proc_macro2::Ident> =
