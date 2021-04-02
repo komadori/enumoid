@@ -15,6 +15,7 @@ extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
+/// Derive macro which implements the `Enumoid` trait
 #[proc_macro_derive(Enumoid)]
 pub fn derive_enumoid(
   input: proc_macro::TokenStream,
