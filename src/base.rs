@@ -7,7 +7,6 @@ use std::ptr;
 pub trait Enumoid: Sized {
   type CompactSize: Copy;
   const SIZE: usize;
-  //const LAST: Self;
   fn into_usize(value: Self) -> usize;
   fn from_usize(value: usize) -> Self;
   fn compact_size(value: usize) -> Self::CompactSize;
@@ -44,6 +43,11 @@ pub trait Enumoid: Sized {
   fn range_inclusive(self, to: Self) -> Map<Range<usize>, fn(usize) -> Self> {
     (Self::into_usize(self)..Self::into_usize(to) + 1).map(Self::from_usize)
   }
+}
+
+pub trait Enumoid1: Enumoid {
+  const FIRST: Self;
+  const LAST: Self;
 }
 
 pub trait EnumFlagsHelper: Enumoid {

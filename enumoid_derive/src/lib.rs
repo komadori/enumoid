@@ -33,13 +33,23 @@ pub fn derive_enumoid(
     };
     let variant_names: Vec<&proc_macro2::Ident> =
       data_enum.variants.iter().map(|x| &x.ident).collect();
-    //let last_variant = variant_names.last();
     let indices: Vec<_> = (0..elem_count).collect();
+    let bounded = if variant_names.is_empty() {
+      quote! {}
+    } else {
+      let first_variant = variant_names.first().unwrap();
+      let last_variant = variant_names.last().unwrap();
+      quote! {
+        impl enumoid::Enumoid1 for #name {
+          const FIRST: Self = #name::#first_variant;
+          const LAST: Self = #name::#last_variant;
+        }
+      }
+    };
     quote! {
       impl enumoid::Enumoid for #name {
         type CompactSize = #sz_type;
         const SIZE: usize = #elem_count;
-        //const LAST: Self = #name::#last_variant;
         #[inline]
         fn into_usize(value: Self) -> usize {
           match value {
@@ -68,6 +78,7 @@ pub fn derive_enumoid(
           sz as Self::CompactSize
         }
       }
+      #bounded
       impl enumoid::base::EnumFlagsHelper for #name {
         type FlagsArray = [u8; #flag_bytes];
         #[inline(always)]
