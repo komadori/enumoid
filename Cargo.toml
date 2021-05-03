@@ -1,6 +1,6 @@
 [package]
 name = "enumoid"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Robin KAY <komadori@gekkou.co.uk>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -15,7 +15,7 @@ categories = ["data-structures"]
 default = ["serde"]
 
 [dependencies]
-enumoid_derive = { version = "0.1", path = "enumoid_derive" }
+enumoid_derive = { version = "0.1.1", path = "enumoid_derive" }
 serde = { version = "1.0", optional = true }
 
 [workspace]
