@@ -4,6 +4,7 @@ use crate::flags::EnumFlags;
 use crate::map::EnumMap;
 use crate::opt_map::EnumOptionMap;
 use crate::vec::EnumVec;
+use num_traits::AsPrimitive;
 use serde::{de, ser};
 use std::convert::TryFrom;
 use std::fmt;
@@ -88,7 +89,7 @@ impl<T: EnumArrayHelper<V> + ser::Serialize, V: ser::Serialize> ser::Serialize
     S: ser::Serializer,
   {
     use ser::SerializeMap;
-    let mut map = ser.serialize_map(Some(T::uncompact_size(self.len)))?;
+    let mut map = ser.serialize_map(Some(self.len.as_()))?;
     for (k, v) in self.iter() {
       map.serialize_entry(&k, v)?;
     }

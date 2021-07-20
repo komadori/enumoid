@@ -1,18 +1,12 @@
 use crate::base::Enumoid;
-use std::iter;
+use num_traits::FromPrimitive;
 use std::marker;
 use std::slice;
 
-pub struct EnumSliceIter<'a, T, V: 'a> {
+pub struct EnumSliceIter<'a, T: Enumoid, V: 'a> {
   pub(crate) _phantom: marker::PhantomData<T>,
-  pub(crate) iter: iter::Enumerate<slice::Iter<'a, V>>,
-}
-
-impl<'a, T: Enumoid, V> EnumSliceIter<'a, T, V> {
-  #[inline(always)]
-  fn f(iv: (usize, &'a V)) -> (T, &'a V) {
-    (T::from_usize(iv.0), iv.1)
-  }
+  pub(crate) word: T::Word,
+  pub(crate) iter: slice::Iter<'a, V>,
 }
 
 impl<'a, T: Enumoid, V> Iterator for EnumSliceIter<'a, T, V> {
@@ -20,32 +14,33 @@ impl<'a, T: Enumoid, V> Iterator for EnumSliceIter<'a, T, V> {
 
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    self.iter.next().map(Self::f)
+    let value = self.iter.next()?;
+    let key = unsafe { T::from_word_unchecked(self.word) };
+    self.word = self.word + T::ONE_WORD;
+    Some((key, value))
   }
 
   fn size_hint(&self) -> (usize, Option<usize>) {
     self.iter.size_hint()
   }
+}
 
+impl<'a, T: Enumoid, V> ExactSizeIterator for EnumSliceIter<'a, T, V> {}
+
+impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIter<'a, T, V> {
   #[inline]
-  fn fold<B, F>(self, init: B, f: F) -> B
-  where
-    F: FnMut(B, Self::Item) -> B,
-  {
-    self.iter.map(Self::f).fold(init, f)
+  fn next_back(&mut self) -> Option<Self::Item> {
+    let value = self.iter.next_back()?;
+    let idx = self.word + T::Word::from_usize(self.iter.len()).unwrap();
+    let key = unsafe { T::from_word_unchecked(idx) };
+    Some((key, value))
   }
 }
 
-pub struct EnumSliceIterMut<'a, T, V: 'a> {
+pub struct EnumSliceIterMut<'a, T: Enumoid, V: 'a> {
   pub(crate) _phantom: marker::PhantomData<T>,
-  pub(crate) iter: iter::Enumerate<slice::IterMut<'a, V>>,
-}
-
-impl<'a, T: Enumoid, V> EnumSliceIterMut<'a, T, V> {
-  #[inline(always)]
-  fn f(iv: (usize, &'a mut V)) -> (T, &'a mut V) {
-    (T::from_usize(iv.0), iv.1)
-  }
+  pub(crate) word: T::Word,
+  pub(crate) iter: slice::IterMut<'a, V>,
 }
 
 impl<'a, T: Enumoid, V> Iterator for EnumSliceIterMut<'a, T, V> {
@@ -53,18 +48,26 @@ impl<'a, T: Enumoid, V> Iterator for EnumSliceIterMut<'a, T, V> {
 
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    self.iter.next().map(Self::f)
-  }
-
-  fn size_hint(&self) -> (usize, Option<usize>) {
-    self.iter.size_hint()
+    let value = self.iter.next()?;
+    let key = unsafe { T::from_word_unchecked(self.word) };
+    self.word = self.word + T::ONE_WORD;
+    Some((key, value))
   }
 
   #[inline]
-  fn fold<B, F>(self, init: B, f: F) -> B
-  where
-    F: FnMut(B, Self::Item) -> B,
-  {
-    self.iter.map(Self::f).fold(init, f)
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    self.iter.size_hint()
+  }
+}
+
+impl<'a, T: Enumoid, V> ExactSizeIterator for EnumSliceIterMut<'a, T, V> {}
+
+impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIterMut<'a, T, V> {
+  #[inline]
+  fn next_back(&mut self) -> Option<Self::Item> {
+    let value = self.iter.next_back()?;
+    let idx = self.word + T::Word::from_usize(self.iter.len()).unwrap();
+    let key = unsafe { T::from_word_unchecked(idx) };
+    Some((key, value))
   }
 }

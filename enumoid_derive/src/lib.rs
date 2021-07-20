@@ -25,15 +25,18 @@ pub fn derive_enumoid(
     let name = input.ident;
     let elem_count = data_enum.variants.len();
     let flag_bytes = (elem_count + 7) / 8;
-    let sz_type = match elem_count {
+    let word_type = match elem_count {
       0..=0xff => quote! { u8 },
       0x100..=0xffff => quote! { u16 },
       0x10000..=0xffffffff => quote! { u32 },
       _ => quote! { usize },
     };
+    let elem_count_lit = proc_macro2::Literal::usize_unsuffixed(elem_count);
     let variant_names: Vec<&proc_macro2::Ident> =
       data_enum.variants.iter().map(|x| &x.ident).collect();
-    let indices: Vec<_> = (0..elem_count).collect();
+    let indices: Vec<_> = (0..elem_count)
+      .map(proc_macro2::Literal::usize_unsuffixed)
+      .collect();
     let bounded = if variant_names.is_empty() {
       quote! {}
     } else {
@@ -48,39 +51,45 @@ pub fn derive_enumoid(
     };
     quote! {
       impl enumoid::Enumoid for #name {
-        type CompactSize = #sz_type;
-        const SIZE: usize = #elem_count;
+        type Word = #word_type;
+        type WordRange = std::ops::Range<#word_type>;
+        const SIZE: usize = #elem_count_lit;
+        const SIZE_WORD: #word_type = #elem_count_lit;
+        const ZERO_WORD: #word_type = 0;
+        const ONE_WORD: #word_type = 1;
         #[inline]
-        fn into_usize(value: Self) -> usize {
-          match value {
+        fn into_word(self) -> Self::Word {
+          match self {
             #(
               #name::#variant_names => #indices,
             )*
           }
         }
         #[inline]
-        fn from_usize(value: usize) -> Self {
+        unsafe fn from_word_unchecked(value: Self::Word) -> Self {
+          debug_assert!(
+            value < Self::SIZE_WORD,
+            "from_word_unchecked: Index out of bounds: {:?} >= {:?}",
+            value,
+            Self::SIZE_WORD
+          );
           match value {
             #(
               #indices => #name::#variant_names,
             )*
-            _ => unreachable!()
+            _ => unsafe { std::hint::unreachable_unchecked() }
           }
         }
-        #[inline(always)]
-        fn uncompact_size(sz: Self::CompactSize) -> usize
-        {
-          sz as usize
-        }
-        #[inline(always)]
-        fn compact_size(sz: usize) -> Self::CompactSize
-        {
-          sz as Self::CompactSize
+        #[inline]
+        fn word_range(base: Self::Word, lim: Self::Word) -> Self::WordRange {
+          base..lim
         }
       }
       #bounded
       impl enumoid::base::EnumFlagsHelper for #name {
         type FlagsArray = [u8; #flag_bytes];
+        const BITS: usize = 8;
+        const BITS_WORD: #word_type = 8;
         #[inline(always)]
         fn slice_flags(arr: &Self::FlagsArray) -> &[u8] { arr }
         #[inline(always)]
@@ -98,7 +107,8 @@ pub fn derive_enumoid(
         #[inline]
         unsafe fn partial_to_total(p: Self::PartialArray)
           -> Self::TotalArray {
-          enumoid::base::unconstrained_transmute::<_, Self::TotalArray>(p) }
+          std::ptr::read(&p as *const _ as *const Self::TotalArray)
+        }
         #[inline(always)]
         fn total_slice(t: &Self::TotalArray) -> &[V] { t }
         #[inline(always)]
@@ -106,10 +116,11 @@ pub fn derive_enumoid(
         #[inline]
         fn total_to_partial(t: Self::TotalArray)
           -> Self::PartialArray {
-          unsafe {
-            enumoid::base::unconstrained_transmute::<_, Self::PartialArray>(
-              t)
-          }
+          let p = unsafe {
+            std::ptr::read(&t as *const _ as *const Self::PartialArray)
+          };
+          std::mem::forget(t);
+          p
         }
       }
     }

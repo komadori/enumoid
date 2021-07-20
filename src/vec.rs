@@ -1,8 +1,10 @@
 use crate::base::EnumArrayHelper;
 use crate::base::EnumFlagsHelper;
+use crate::base::Size;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
+use num_traits::{AsPrimitive, Zero};
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -13,93 +15,100 @@ use std::ptr;
 
 /// A vector of values `V` indexed by enumoid `T`.
 pub struct EnumVec<T: EnumArrayHelper<V>, V> {
-  pub(crate) len: T::CompactSize,
+  pub(crate) len: T::Word,
   pub(crate) data: T::PartialArray,
 }
 
 impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   pub fn new() -> Self {
     EnumVec {
-      len: T::compact_size(0),
+      len: T::ZERO_WORD,
       data: T::new_partial(),
     }
   }
 
-  pub fn new_with<F>(last_key: Option<T>, mut f: F) -> Self
+  pub fn new_with<F>(size: Option<Size<T>>, mut f: F) -> Self
   where
     F: FnMut(T) -> V,
   {
-    let len = match last_key {
-      Some(key) => T::into_usize(key) + 1,
-      None => 0,
-    };
     let mut vec = Self::new();
-    for i in 0..len {
-      vec.push(f(T::from_usize(i)))
+    if let Some(sz) = size {
+      for key in sz.iter() {
+        vec.push(f(key));
+      }
     }
     vec
   }
 
   pub fn as_slice(&self) -> &[V] {
-    let inited = &T::partial_slice(&self.data)[0..T::uncompact_size(self.len)];
-    unsafe { &*(inited as *const [std::mem::MaybeUninit<V>] as *const [V]) }
+    debug_assert!(
+      self.len < T::SIZE_WORD,
+      "Length out of bounds: {:?} >= {:?}",
+      self.len,
+      T::SIZE
+    );
+    unsafe {
+      let inited =
+        T::partial_slice(&self.data).get_unchecked(0..self.len.as_());
+      &*(inited as *const [std::mem::MaybeUninit<V>] as *const [V])
+    }
   }
 
   pub fn as_slice_mut(&mut self) -> &mut [V] {
-    let inited =
-      &mut T::partial_slice_mut(&mut self.data)[0..T::uncompact_size(self.len)];
-    unsafe { &mut *(inited as *mut [std::mem::MaybeUninit<V>] as *mut [V]) }
+    debug_assert!(
+      self.len < T::SIZE_WORD,
+      "Length out of bounds: {:?} >= {:?}",
+      self.len,
+      T::SIZE
+    );
+    unsafe {
+      let inited = T::partial_slice_mut(&mut self.data)
+        .get_unchecked_mut(0..self.len.as_());
+      &mut *(inited as *mut [std::mem::MaybeUninit<V>] as *mut [V])
+    }
   }
 
   pub fn get(&self, key: T) -> Option<&V> {
-    let i = T::into_usize(key);
-    if i < T::uncompact_size(self.len) {
-      Some(&self.as_slice()[i])
-    } else {
-      None
-    }
-  }
-
-  pub fn len(&self) -> usize {
-    T::uncompact_size(self.len)
+    let i = T::into_word(key);
+    self.as_slice().get(i.as_())
   }
 
   pub fn is_empty(&self) -> bool {
-    T::uncompact_size(self.len) == 0
+    self.len.is_zero()
   }
 
-  pub fn last_key(&self) -> Option<T> {
-    let len = T::uncompact_size(self.len);
-    if len == 0 {
-      None
-    } else {
-      Some(T::from_usize(len - 1))
-    }
+  pub fn size(&self) -> Size<T> {
+    unsafe { Size::<T>::from_word_unchecked(self.len) }
   }
 
   pub fn swap(&mut self, a: T, b: T) {
-    self.as_slice_mut().swap(T::into_usize(a), T::into_usize(b))
+    self
+      .as_slice_mut()
+      .swap(T::into_word(a).as_(), T::into_word(b).as_())
   }
 
   pub fn clear(&mut self) {
-    for x in self.iter_mut() {
-      mem::drop(x)
+    for cell in
+      T::partial_slice_mut(&mut self.data)[0..self.len.as_()].iter_mut()
+    {
+      unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
     }
-    self.len = T::compact_size(0);
+    self.len = T::ZERO_WORD;
   }
 
   pub fn push(&mut self, value: V) {
-    let len = T::uncompact_size(self.len);
+    let len = self.len.as_();
     T::partial_slice_mut(&mut self.data)[len] =
       mem::MaybeUninit::<V>::new(value);
-    self.len = T::compact_size(len + 1);
+    self.len = self.len + T::ONE_WORD;
   }
 
   #[inline]
   pub fn iter(&self) -> EnumSliceIter<T, V> {
     EnumSliceIter {
       _phantom: Default::default(),
-      iter: self.as_slice().iter().enumerate(),
+      word: T::ZERO_WORD,
+      iter: self.as_slice().iter(),
     }
   }
 
@@ -107,7 +116,8 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   pub fn iter_mut(&mut self) -> EnumSliceIterMut<T, V> {
     EnumSliceIterMut {
       _phantom: Default::default(),
-      iter: self.as_slice_mut().iter_mut().enumerate(),
+      word: T::ZERO_WORD,
+      iter: self.as_slice_mut().iter_mut(),
     }
   }
 }
@@ -126,9 +136,8 @@ impl<T: EnumArrayHelper<V>, V> Default for EnumVec<T, V> {
 
 impl<T: EnumArrayHelper<V>, V> Drop for EnumVec<T, V> {
   fn drop(&mut self) {
-    for cell in T::partial_slice_mut(&mut self.data)
-      [0..T::uncompact_size(self.len)]
-      .iter_mut()
+    for cell in
+      T::partial_slice_mut(&mut self.data)[0..self.len.as_()].iter_mut()
     {
       unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
     }
@@ -149,13 +158,13 @@ impl<T: EnumArrayHelper<V>, V> Index<T> for EnumVec<T, V> {
   type Output = V;
 
   fn index(&self, i: T) -> &V {
-    &self.as_slice()[T::into_usize(i)]
+    &self.as_slice()[T::into_word(i).as_()]
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumVec<T, V> {
   fn index_mut(&mut self, i: T) -> &mut V {
-    &mut self.as_slice_mut()[T::into_usize(i)]
+    &mut self.as_slice_mut()[T::into_word(i).as_()]
   }
 }
 
@@ -186,7 +195,7 @@ impl<'a, T: EnumFlagsHelper + EnumArrayHelper<V>, V>
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     match from.is_vec() {
       Some(size) => Ok(EnumVec {
-        len: T::compact_size(size),
+        len: size.size(),
         data: from.data,
       }),
       None => Err(()),

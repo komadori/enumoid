@@ -1,15 +1,14 @@
 use crate::base::EnumFlagsHelper;
+use num_traits::AsPrimitive;
 use std::fmt;
 use std::fmt::Debug;
-use std::ops::{Index, Range};
+use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
 #[derive(Copy, Clone)]
 pub struct EnumFlags<T: EnumFlagsHelper> {
   data: T::FlagsArray,
 }
-
-const BITS: usize = 8;
 
 impl<T: EnumFlagsHelper> EnumFlags<T> {
   pub fn new() -> Self {
@@ -19,16 +18,23 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
   }
 
   #[inline]
-  pub(crate) fn set_internal(&mut self, i: usize, x: bool) {
-    debug_assert!(i < T::SIZE, "Enum out of bounds: {} >= {}", i, T::SIZE);
-    let j = i / BITS;
-    let mask = 1 << (i % BITS);
+  pub(crate) fn set_internal(&mut self, i: T::Word, x: bool) {
+    debug_assert!(
+      i < T::SIZE_WORD,
+      "Index out of bounds: {:?} >= {:?}",
+      i,
+      T::SIZE
+    );
+    let j = (i / T::BITS_WORD).as_();
+    let mask = 1 << (i % T::BITS_WORD).as_();
+    let set = if x { mask } else { 0 };
     let slice = T::slice_flags_mut(&mut self.data);
-    slice[j] = if x { slice[j] | mask } else { slice[j] & !mask }
+    let bits = unsafe { slice.get_unchecked_mut(j) };
+    *bits = *bits & !mask | set;
   }
 
   pub fn set(&mut self, e: T, x: bool) {
-    self.set_internal(T::into_usize(e), x)
+    self.set_internal(T::into_word(e), x)
   }
 
   pub fn clear(&mut self) {
@@ -36,21 +42,27 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
   }
 
   #[inline]
-  pub(crate) fn get_internal(&self, i: usize) -> bool {
-    debug_assert!(i < T::SIZE, "Enum out of bounds: {} >= {}", i, T::SIZE);
-    let j = i / BITS;
+  pub(crate) fn get_internal(&self, i: T::Word) -> bool {
+    debug_assert!(
+      i < T::SIZE_WORD,
+      "Index out of bounds: {:?} >= {:?}",
+      i,
+      T::SIZE
+    );
+    let j = (i / T::BITS_WORD).as_();
     let slice = T::slice_flags(&self.data);
-    (slice[j] >> (i % BITS)) & 1 == 1
+    let bits = unsafe { slice.get_unchecked(j) };
+    (bits >> (i % T::BITS_WORD).as_()) & 1 == 1
   }
 
   pub fn get(&self, e: T) -> bool {
-    self.get_internal(T::into_usize(e))
+    self.get_internal(T::into_word(e))
   }
 
   pub fn iter(&self) -> EnumFlagsIter<T> {
     EnumFlagsIter {
       flags: self,
-      iter: 0..T::SIZE,
+      iter: T::word_range(T::ZERO_WORD, T::SIZE_WORD),
     }
   }
 
@@ -68,9 +80,9 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
 
   pub fn all(&self) -> bool {
     let slice = T::slice_flags(&self.data);
-    let last = !0 >> (BITS - T::SIZE % BITS);
-    slice[..T::SIZE / BITS].iter().all(|&val| val == !0)
-      && (T::SIZE % BITS == 0 || slice[T::SIZE / BITS] == last)
+    let last = !0 >> (T::BITS - T::SIZE % T::BITS);
+    slice[..T::SIZE / T::BITS].iter().all(|&val| val == !0)
+      && (T::SIZE % T::BITS == 0 || slice[T::SIZE / T::BITS] == last)
   }
 }
 
@@ -104,32 +116,23 @@ impl<T: EnumFlagsHelper> Index<T> for EnumFlags<T> {
 
 pub struct EnumFlagsIter<'a, T: EnumFlagsHelper> {
   flags: &'a EnumFlags<T>,
-  iter: Range<usize>,
+  iter: T::WordRange,
 }
 
 impl<'a, T: EnumFlagsHelper> Iterator for EnumFlagsIter<'a, T> {
   type Item = (T, bool);
 
+  #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    let flags = &self.flags;
-    self
-      .iter
-      .next()
-      .map(|i| (T::from_usize(i), flags.get_internal(i)))
+    let word = self.iter.next()?;
+    let key = unsafe { T::from_word_unchecked(word) };
+    Some((key, self.flags.get_internal(word)))
   }
 
+  #[inline]
   fn size_hint(&self) -> (usize, Option<usize>) {
     self.iter.size_hint()
   }
-
-  fn fold<B, F>(self, init: B, f: F) -> B
-  where
-    F: FnMut(B, Self::Item) -> B,
-  {
-    let flags = &self.flags;
-    self
-      .iter
-      .map(|i| (T::from_usize(i), flags.get_internal(i)))
-      .fold(init, f)
-  }
 }
+
+impl<'a, T: EnumFlagsHelper> ExactSizeIterator for EnumFlagsIter<'a, T> {}

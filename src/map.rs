@@ -3,6 +3,7 @@ use crate::base::EnumFlagsHelper;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
+use num_traits::AsPrimitive;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -27,8 +28,9 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
     F: FnMut(T) -> V,
   {
     let mut arr = T::new_partial();
-    for (i, cell) in T::partial_slice_mut(&mut arr).iter_mut().enumerate() {
-      *cell = mem::MaybeUninit::new(f(T::from_usize(i)));
+    for (key, cell) in T::iter().zip(T::partial_slice_mut(&mut arr).iter_mut())
+    {
+      *cell = mem::MaybeUninit::new(f(key));
     }
     EnumMap {
       data: unsafe { T::partial_to_total(arr) },
@@ -44,18 +46,21 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   }
 
   pub fn get(&self, key: T) -> &V {
-    &self.as_slice()[T::into_usize(key)]
+    &self[key]
   }
 
   pub fn swap(&mut self, a: T, b: T) {
-    self.as_slice_mut().swap(T::into_usize(a), T::into_usize(b))
+    self
+      .as_slice_mut()
+      .swap(T::into_word(a).as_(), T::into_word(b).as_())
   }
 
   #[inline]
   pub fn iter(&self) -> EnumSliceIter<T, V> {
     EnumSliceIter {
       _phantom: Default::default(),
-      iter: self.as_slice().iter().enumerate(),
+      word: T::ZERO_WORD,
+      iter: self.as_slice().iter(),
     }
   }
 
@@ -63,7 +68,8 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   pub fn iter_mut(&mut self) -> EnumSliceIterMut<T, V> {
     EnumSliceIterMut {
       _phantom: Default::default(),
-      iter: self.as_slice_mut().iter_mut().enumerate(),
+      word: T::ZERO_WORD,
+      iter: self.as_slice_mut().iter_mut(),
     }
   }
 }
@@ -95,13 +101,13 @@ impl<T: EnumArrayHelper<V>, V> Index<T> for EnumMap<T, V> {
   type Output = V;
 
   fn index(&self, i: T) -> &V {
-    &self.as_slice()[T::into_usize(i)]
+    unsafe { self.as_slice().get_unchecked(T::into_word(i).as_()) }
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumMap<T, V> {
   fn index_mut(&mut self, i: T) -> &mut V {
-    &mut self.as_slice_mut()[T::into_usize(i)]
+    unsafe { self.as_slice_mut().get_unchecked_mut(T::into_word(i).as_()) }
   }
 }
 

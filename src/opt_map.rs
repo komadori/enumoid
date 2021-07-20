@@ -1,6 +1,8 @@
 use crate::base::EnumArrayHelper;
 use crate::base::EnumFlagsHelper;
+use crate::base::Size;
 use crate::flags::EnumFlags;
+use num_traits::AsPrimitive;
 use std::mem;
 use std::ptr;
 
@@ -19,17 +21,17 @@ impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   }
 
   pub fn get(&self, key: T) -> Option<&V> {
-    let i = T::into_usize(key);
+    let i = T::into_word(key);
     if self.valid.get_internal(i) {
-      Some(unsafe { &*T::partial_slice(&self.data)[i].as_ptr() })
+      Some(unsafe { &*T::partial_slice(&self.data)[i.as_()].as_ptr() })
     } else {
       None
     }
   }
 
   pub fn set(&mut self, key: T, value: Option<V>) {
-    let i = T::into_usize(key);
-    let cell = &mut T::partial_slice_mut(&mut self.data)[i];
+    let i = T::into_word(key);
+    let cell = &mut T::partial_slice_mut(&mut self.data)[i.as_()];
     if self.valid.get_internal(i) {
       unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
     }
@@ -47,20 +49,20 @@ impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     self.valid.all()
   }
 
-  pub fn is_vec(&self) -> Option<usize> {
+  pub fn is_vec(&self) -> Option<Size<T>> {
     let mut seen_none = false;
-    let mut size = 0;
+    let mut size = T::ZERO_WORD;
     for (k, v) in self.valid.iter() {
       if v {
         if seen_none {
           return None;
         }
-        size = T::into_usize(k) + 1;
+        size = T::into_word(k) + T::ONE_WORD;
       } else {
         seen_none = true;
       }
     }
-    Some(size)
+    Some(unsafe { Size::<T>::from_word_unchecked(size) })
   }
 }
 
