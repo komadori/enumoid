@@ -88,6 +88,7 @@ pub fn derive_enumoid(
       #bounded
       impl enumoid::base::EnumFlagsHelper for #name {
         type FlagsArray = [u8; #flag_bytes];
+        const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
         const BITS: usize = 8;
         const BITS_WORD: #word_type = 8;
         #[inline(always)]

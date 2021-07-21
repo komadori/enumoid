@@ -197,7 +197,8 @@ pub trait Enumoid1: Enumoid {
 }
 
 pub trait EnumFlagsHelper: Enumoid {
-  type FlagsArray: Sized + Default;
+  type FlagsArray: Sized;
+  const DEFAULT_FLAGS: Self::FlagsArray;
   const BITS: usize;
   const BITS_WORD: Self::Word;
   fn slice_flags(arr: &Self::FlagsArray) -> &[u8];

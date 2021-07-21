@@ -13,7 +13,7 @@ pub struct EnumFlags<T: EnumFlagsHelper> {
 impl<T: EnumFlagsHelper> EnumFlags<T> {
   pub fn new() -> Self {
     EnumFlags {
-      data: Default::default(),
+      data: T::DEFAULT_FLAGS,
     }
   }
 
@@ -38,7 +38,7 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
   }
 
   pub fn clear(&mut self) {
-    self.data = Default::default();
+    self.data = T::DEFAULT_FLAGS;
   }
 
   #[inline]
