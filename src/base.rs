@@ -8,6 +8,7 @@ use std::mem;
 pub type EnumoidIter<T> =
   Map<<T as Enumoid>::WordRange, fn(<T as Enumoid>::Word) -> T>;
 
+/// A counter between 0 and the number of values inhabiting `T`
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Size<T: Enumoid>(T::Word);
 
@@ -121,23 +122,38 @@ impl<T: Enumoid> Size<T> {
 }
 
 /// Trait for enumerable types.
+///
+/// Some members are hidden. Impls should only be defined via the `Enumoid` derive macro.
 pub trait Enumoid: Sized {
   type Word: AsPrimitive<usize> + FromPrimitive + PrimInt + Debug;
-  type WordRange: Iterator<Item = Self::Word>;
-  type FlagsArray: Sized;
   const SIZE: usize;
-  const SIZE_WORD: Self::Word;
-  const ZERO_WORD: Self::Word;
-  const ONE_WORD: Self::Word;
-  const DEFAULT_FLAGS: Self::FlagsArray;
-  const FLAGS_BITS: usize;
-  const FLAGS_BITS_WORD: Self::Word;
   fn into_word(self) -> Self::Word;
+
+  #[doc(hidden)]
+  type WordRange: Iterator<Item = Self::Word>;
+  #[doc(hidden)]
+  type FlagsArray: Sized;
+  #[doc(hidden)]
+  const SIZE_WORD: Self::Word;
+  #[doc(hidden)]
+  const ZERO_WORD: Self::Word;
+  #[doc(hidden)]
+  const ONE_WORD: Self::Word;
+  #[doc(hidden)]
+  const DEFAULT_FLAGS: Self::FlagsArray;
+  #[doc(hidden)]
+  const FLAGS_BITS: usize;
+  #[doc(hidden)]
+  const FLAGS_BITS_WORD: Self::Word;
   /// # Safety
   /// The input word must be less than SIZE.
+  #[doc(hidden)]
   unsafe fn from_word_unchecked(value: Self::Word) -> Self;
+  #[doc(hidden)]
   fn word_range(base: Self::Word, sz: Self::Word) -> Self::WordRange;
+  #[doc(hidden)]
   fn slice_flags(arr: &Self::FlagsArray) -> &[u8];
+  #[doc(hidden)]
   fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8];
 
   #[inline]
@@ -195,29 +211,42 @@ pub trait Enumoid: Sized {
   }
 }
 
+/// Trait for enumerable types with at least one value.
 pub trait Enumoid1: Enumoid {
   const FIRST: Self;
   const LAST: Self;
 }
 
+/// Workaround for const generics not supporting associated consts yet.
+///
+/// All the members are hidden. Impls should only be defined via the `Enumoid` derive macro.
 pub trait EnumArrayHelper<V: Sized>: Enumoid {
+  #[doc(hidden)]
   type PartialArray: Sized;
+  #[doc(hidden)]
   type TotalArray: Sized;
 
+  #[doc(hidden)]
   fn partial_slice(p: &Self::PartialArray) -> &[mem::MaybeUninit<V>];
+  #[doc(hidden)]
   fn partial_slice_mut(
     p: &mut Self::PartialArray,
   ) -> &mut [mem::MaybeUninit<V>];
   /// # Safety
   /// All the elements in the input array must be initialised.
+  #[doc(hidden)]
   unsafe fn partial_to_total(p: Self::PartialArray) -> Self::TotalArray;
 
+  #[doc(hidden)]
   fn total_slice(t: &Self::TotalArray) -> &[V];
+  #[doc(hidden)]
   fn total_slice_mut(t: &mut Self::TotalArray) -> &mut [V];
+  #[doc(hidden)]
   fn total_to_partial(t: Self::TotalArray) -> Self::PartialArray;
 
   #[inline]
   #[allow(clippy::uninit_assumed_init)]
+  #[doc(hidden)]
   fn new_partial() -> Self::PartialArray {
     unsafe { mem::MaybeUninit::uninit().assume_init() }
   }
