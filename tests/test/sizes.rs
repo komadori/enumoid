@@ -1,12 +1,12 @@
 use crate::test::types::{Seventeen, Sixteen, Three, ThreeHundred, Zero};
-use enumoid::base::{EnumArrayHelper, EnumFlagsHelper};
+use enumoid::EnumArrayHelper;
 use enumoid::EnumFlags;
 use enumoid::EnumMap;
 use enumoid::EnumOptionMap;
 use enumoid::EnumVec;
 use enumoid::Size;
 
-fn test_type<T: EnumFlagsHelper + EnumArrayHelper<u8>>(
+fn test_type<T: EnumArrayHelper<u8>>(
   variants: usize,
   value_bytes: usize,
   word_bytes: usize,

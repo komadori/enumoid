@@ -53,10 +53,14 @@ pub fn derive_enumoid(
       impl enumoid::Enumoid for #name {
         type Word = #word_type;
         type WordRange = std::ops::Range<#word_type>;
+        type FlagsArray = [u8; #flag_bytes];
         const SIZE: usize = #elem_count_lit;
         const SIZE_WORD: #word_type = #elem_count_lit;
         const ZERO_WORD: #word_type = 0;
         const ONE_WORD: #word_type = 1;
+        const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
+        const FLAGS_BITS: usize = 8;
+        const FLAGS_BITS_WORD: #word_type = 8;
         #[inline]
         fn into_word(self) -> Self::Word {
           match self {
@@ -84,19 +88,13 @@ pub fn derive_enumoid(
         fn word_range(base: Self::Word, lim: Self::Word) -> Self::WordRange {
           base..lim
         }
-      }
-      #bounded
-      impl enumoid::base::EnumFlagsHelper for #name {
-        type FlagsArray = [u8; #flag_bytes];
-        const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
-        const BITS: usize = 8;
-        const BITS_WORD: #word_type = 8;
         #[inline(always)]
         fn slice_flags(arr: &Self::FlagsArray) -> &[u8] { arr }
         #[inline(always)]
         fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8] { arr }
       }
-      impl<V> enumoid::base::EnumArrayHelper<V> for #name {
+      #bounded
+      impl<V> enumoid::EnumArrayHelper<V> for #name {
         type PartialArray = [std::mem::MaybeUninit<V>; #elem_count];
         type TotalArray = [V; #elem_count];
         #[inline(always)]

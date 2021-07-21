@@ -1,5 +1,4 @@
 use crate::base::EnumArrayHelper;
-use crate::base::EnumFlagsHelper;
 use crate::base::Size;
 use crate::flags::EnumFlags;
 use num_traits::AsPrimitive;
@@ -7,12 +6,12 @@ use std::mem;
 use std::ptr;
 
 /// A partial map from enumoid `T` to values `V`.
-pub struct EnumOptionMap<T: EnumFlagsHelper + EnumArrayHelper<V>, V> {
+pub struct EnumOptionMap<T: EnumArrayHelper<V>, V> {
   valid: EnumFlags<T>,
   pub(crate) data: T::PartialArray,
 }
 
-impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
+impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   pub fn new() -> Self {
     EnumOptionMap {
       valid: EnumFlags::<T>::new(),
@@ -66,9 +65,7 @@ impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   }
 }
 
-impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V> Default
-  for EnumOptionMap<T, V>
-{
+impl<T: EnumArrayHelper<V>, V> Default for EnumOptionMap<T, V> {
   fn default() -> Self {
     EnumOptionMap::<T, V>::new()
   }

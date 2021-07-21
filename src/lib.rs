@@ -1,6 +1,6 @@
 //! This crate is a Rust library which provides containers indexed by enums.
 
-pub mod base;
+mod base;
 mod flags;
 mod iter;
 mod map;
@@ -9,6 +9,7 @@ mod opt_map;
 mod serde;
 mod vec;
 
+pub use base::EnumArrayHelper;
 pub use base::Enumoid;
 pub use base::Enumoid1;
 pub use base::Size;

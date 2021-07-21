@@ -1,4 +1,4 @@
-use crate::base::EnumFlagsHelper;
+use crate::Enumoid;
 use num_traits::AsPrimitive;
 use std::fmt;
 use std::fmt::Debug;
@@ -6,11 +6,11 @@ use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
 #[derive(Copy, Clone)]
-pub struct EnumFlags<T: EnumFlagsHelper> {
+pub struct EnumFlags<T: Enumoid> {
   data: T::FlagsArray,
 }
 
-impl<T: EnumFlagsHelper> EnumFlags<T> {
+impl<T: Enumoid> EnumFlags<T> {
   pub fn new() -> Self {
     EnumFlags {
       data: T::DEFAULT_FLAGS,
@@ -25,8 +25,8 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
       i,
       T::SIZE
     );
-    let j = (i / T::BITS_WORD).as_();
-    let mask = 1 << (i % T::BITS_WORD).as_();
+    let j = (i / T::FLAGS_BITS_WORD).as_();
+    let mask = 1 << (i % T::FLAGS_BITS_WORD).as_();
     let set = if x { mask } else { 0 };
     let slice = T::slice_flags_mut(&mut self.data);
     let bits = unsafe { slice.get_unchecked_mut(j) };
@@ -49,10 +49,10 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
       i,
       T::SIZE
     );
-    let j = (i / T::BITS_WORD).as_();
+    let j = (i / T::FLAGS_BITS_WORD).as_();
     let slice = T::slice_flags(&self.data);
     let bits = unsafe { slice.get_unchecked(j) };
-    (bits >> (i % T::BITS_WORD).as_()) & 1 == 1
+    (bits >> (i % T::FLAGS_BITS_WORD).as_()) & 1 == 1
   }
 
   pub fn get(&self, e: T) -> bool {
@@ -80,19 +80,22 @@ impl<T: EnumFlagsHelper> EnumFlags<T> {
 
   pub fn all(&self) -> bool {
     let slice = T::slice_flags(&self.data);
-    let last = !0 >> (T::BITS - T::SIZE % T::BITS);
-    slice[..T::SIZE / T::BITS].iter().all(|&val| val == !0)
-      && (T::SIZE % T::BITS == 0 || slice[T::SIZE / T::BITS] == last)
+    let last = !0 >> (T::FLAGS_BITS - T::SIZE % T::FLAGS_BITS);
+    slice[..T::SIZE / T::FLAGS_BITS]
+      .iter()
+      .all(|&val| val == !0)
+      && (T::SIZE % T::FLAGS_BITS == 0
+        || slice[T::SIZE / T::FLAGS_BITS] == last)
   }
 }
 
-impl<T: EnumFlagsHelper + Debug> Debug for EnumFlags<T> {
+impl<T: Enumoid + Debug> Debug for EnumFlags<T> {
   fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
     fmt.debug_map().entries(self.iter()).finish()
   }
 }
 
-impl<T: EnumFlagsHelper> Default for EnumFlags<T> {
+impl<T: Enumoid> Default for EnumFlags<T> {
   fn default() -> Self {
     EnumFlags::<T>::new()
   }
@@ -101,7 +104,7 @@ impl<T: EnumFlagsHelper> Default for EnumFlags<T> {
 const TRUE: &bool = &true;
 const FALSE: &bool = &false;
 
-impl<T: EnumFlagsHelper> Index<T> for EnumFlags<T> {
+impl<T: Enumoid> Index<T> for EnumFlags<T> {
   type Output = bool;
 
   #[inline]
@@ -114,12 +117,12 @@ impl<T: EnumFlagsHelper> Index<T> for EnumFlags<T> {
   }
 }
 
-pub struct EnumFlagsIter<'a, T: EnumFlagsHelper> {
+pub struct EnumFlagsIter<'a, T: Enumoid> {
   flags: &'a EnumFlags<T>,
   iter: T::WordRange,
 }
 
-impl<'a, T: EnumFlagsHelper> Iterator for EnumFlagsIter<'a, T> {
+impl<'a, T: Enumoid> Iterator for EnumFlagsIter<'a, T> {
   type Item = (T, bool);
 
   #[inline]
@@ -135,4 +138,4 @@ impl<'a, T: EnumFlagsHelper> Iterator for EnumFlagsIter<'a, T> {
   }
 }
 
-impl<'a, T: EnumFlagsHelper> ExactSizeIterator for EnumFlagsIter<'a, T> {}
+impl<'a, T: Enumoid> ExactSizeIterator for EnumFlagsIter<'a, T> {}

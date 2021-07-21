@@ -1,5 +1,5 @@
 use crate::base::EnumArrayHelper;
-use crate::base::EnumFlagsHelper;
+use crate::base::Enumoid;
 use crate::flags::EnumFlags;
 use crate::map::EnumMap;
 use crate::opt_map::EnumOptionMap;
@@ -10,13 +10,11 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::marker;
 
-struct OptMapSerdeVisitor<T: EnumFlagsHelper + EnumArrayHelper<V>, V, R> {
+struct OptMapSerdeVisitor<T: EnumArrayHelper<V>, V, R> {
   marker: marker::PhantomData<fn(EnumOptionMap<T, V>) -> R>,
 }
 
-impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V, R>
-  OptMapSerdeVisitor<T, V, R>
-{
+impl<T: EnumArrayHelper<V>, V, R> OptMapSerdeVisitor<T, V, R> {
   fn new() -> Self {
     OptMapSerdeVisitor {
       marker: marker::PhantomData,
@@ -26,7 +24,7 @@ impl<T: EnumFlagsHelper + EnumArrayHelper<V>, V, R>
 
 impl<'de, K, V, R> de::Visitor<'de> for OptMapSerdeVisitor<K, V, R>
 where
-  K: EnumFlagsHelper + EnumArrayHelper<V> + de::Deserialize<'de>,
+  K: EnumArrayHelper<V> + de::Deserialize<'de>,
   V: de::Deserialize<'de>,
   R: TryFrom<EnumOptionMap<K, V>>,
 {
@@ -69,7 +67,7 @@ impl<T: EnumArrayHelper<V> + serde::ser::Serialize, V: serde::ser::Serialize>
 
 impl<
     'de,
-    T: EnumFlagsHelper + EnumArrayHelper<V> + de::Deserialize<'de>,
+    T: EnumArrayHelper<V> + de::Deserialize<'de>,
     V: de::Deserialize<'de>,
   > de::Deserialize<'de> for EnumMap<T, V>
 {
@@ -99,7 +97,7 @@ impl<T: EnumArrayHelper<V> + ser::Serialize, V: ser::Serialize> ser::Serialize
 
 impl<
     'de,
-    T: EnumFlagsHelper + EnumArrayHelper<V> + de::Deserialize<'de>,
+    T: EnumArrayHelper<V> + de::Deserialize<'de>,
     V: de::Deserialize<'de>,
   > de::Deserialize<'de> for EnumVec<T, V>
 {
@@ -111,11 +109,11 @@ impl<
   }
 }
 
-struct FlagsSerdeVisitor<T: EnumFlagsHelper, R> {
+struct FlagsSerdeVisitor<T: Enumoid, R> {
   marker: marker::PhantomData<fn(EnumFlags<T>) -> R>,
 }
 
-impl<T: EnumFlagsHelper, R> FlagsSerdeVisitor<T, R> {
+impl<T: Enumoid, R> FlagsSerdeVisitor<T, R> {
   fn new() -> Self {
     FlagsSerdeVisitor {
       marker: marker::PhantomData,
@@ -125,7 +123,7 @@ impl<T: EnumFlagsHelper, R> FlagsSerdeVisitor<T, R> {
 
 impl<'de, K, R> de::Visitor<'de> for FlagsSerdeVisitor<K, R>
 where
-  K: EnumFlagsHelper + de::Deserialize<'de>,
+  K: Enumoid + de::Deserialize<'de>,
   R: TryFrom<EnumFlags<K>>,
 {
   type Value = R;
@@ -149,7 +147,7 @@ where
   }
 }
 
-impl<T: EnumFlagsHelper + ser::Serialize> ser::Serialize for EnumFlags<T> {
+impl<T: Enumoid + ser::Serialize> ser::Serialize for EnumFlags<T> {
   fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
   where
     S: ser::Serializer,
@@ -163,7 +161,7 @@ impl<T: EnumFlagsHelper + ser::Serialize> ser::Serialize for EnumFlags<T> {
   }
 }
 
-impl<'de, T: EnumFlagsHelper + de::Deserialize<'de>> de::Deserialize<'de>
+impl<'de, T: Enumoid + de::Deserialize<'de>> de::Deserialize<'de>
   for EnumFlags<T>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>

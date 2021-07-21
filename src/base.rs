@@ -124,15 +124,21 @@ impl<T: Enumoid> Size<T> {
 pub trait Enumoid: Sized {
   type Word: AsPrimitive<usize> + FromPrimitive + PrimInt + Debug;
   type WordRange: Iterator<Item = Self::Word>;
+  type FlagsArray: Sized;
   const SIZE: usize;
   const SIZE_WORD: Self::Word;
   const ZERO_WORD: Self::Word;
   const ONE_WORD: Self::Word;
+  const DEFAULT_FLAGS: Self::FlagsArray;
+  const FLAGS_BITS: usize;
+  const FLAGS_BITS_WORD: Self::Word;
   fn into_word(self) -> Self::Word;
   /// # Safety
   /// The input word must be less than SIZE.
   unsafe fn from_word_unchecked(value: Self::Word) -> Self;
   fn word_range(base: Self::Word, sz: Self::Word) -> Self::WordRange;
+  fn slice_flags(arr: &Self::FlagsArray) -> &[u8];
+  fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8];
 
   #[inline]
   fn from_word(value: Self::Word) -> Option<Self> {
@@ -192,15 +198,6 @@ pub trait Enumoid: Sized {
 pub trait Enumoid1: Enumoid {
   const FIRST: Self;
   const LAST: Self;
-}
-
-pub trait EnumFlagsHelper: Enumoid {
-  type FlagsArray: Sized;
-  const DEFAULT_FLAGS: Self::FlagsArray;
-  const BITS: usize;
-  const BITS_WORD: Self::Word;
-  fn slice_flags(arr: &Self::FlagsArray) -> &[u8];
-  fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8];
 }
 
 pub trait EnumArrayHelper<V: Sized>: Enumoid {
