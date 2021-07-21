@@ -45,6 +45,6 @@ fn test_seventeen() {
 }
 
 #[test]
-fn test_three_hundered() {
+fn test_three_hundred() {
   test_type::<ThreeHundred>(300, 2, 2, 38);
 }
