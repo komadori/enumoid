@@ -41,7 +41,7 @@ impl<T: Enumoid> Size<T> {
   }
 
   #[inline]
-  pub fn size(&self) -> T::Word {
+  pub fn to_word(&self) -> T::Word {
     self.0
   }
 
@@ -62,7 +62,7 @@ impl<T: Enumoid> Size<T> {
   #[inline]
   pub fn next(&self, value: T) -> Option<T> {
     let w = value.into_word() + T::ONE_WORD;
-    if w < self.size() {
+    if w < self.to_word() {
       Some(unsafe { T::from_word_unchecked(w) })
     } else {
       None
@@ -77,27 +77,27 @@ impl<T: Enumoid> Size<T> {
   #[inline]
   pub fn next_wrapped(&self, value: T) -> T {
     let w = value.into_word() + T::ONE_WORD;
-    let q = if w < self.size() { w } else { T::ZERO_WORD };
+    let q = if w < self.to_word() { w } else { T::ZERO_WORD };
     unsafe { T::from_word_unchecked(q) }
   }
 
   #[inline]
   pub fn prev_wrapped(&self, value: T) -> T {
     let w = value.into_word();
-    let q = if w > T::ZERO_WORD { w } else { self.size() } - T::ONE_WORD;
+    let q = if w > T::ZERO_WORD { w } else { self.to_word() } - T::ONE_WORD;
     unsafe { T::from_word_unchecked(q) }
   }
 
   #[inline]
   pub fn iter(&self) -> EnumoidIter<T> {
-    T::word_range(T::ZERO_WORD, self.size())
+    T::word_range(T::ZERO_WORD, self.to_word())
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w + T::ONE_WORD < self.size() {
+    if w + T::ONE_WORD < self.to_word() {
       unsafe { Size::from_word_unchecked(w) }.iter()
     } else {
       self.iter()
@@ -106,14 +106,14 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub fn iter_from(&self, from: T) -> EnumoidIter<T> {
-    T::word_range(from.into_word(), self.size())
+    T::word_range(from.into_word(), self.to_word())
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
   pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w + T::ONE_WORD < self.size() {
+    if w + T::ONE_WORD < self.to_word() {
       unsafe { Size::from_word_unchecked(w) }.iter_from(from)
     } else {
       self.iter_from(from)
