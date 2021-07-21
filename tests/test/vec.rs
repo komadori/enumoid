@@ -11,4 +11,6 @@ fn test_vec() {
   assert_eq!(vec.size(), Size::from_last_key(Three::B));
   assert_eq!(vec[Three::A], 100);
   assert_eq!(vec[Three::B], 200);
+  let collected: Vec<_> = vec.iter().collect();
+  assert_eq!(collected, vec![(Three::A, &100), (Three::B, &200)]);
 }

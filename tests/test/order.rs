@@ -72,3 +72,9 @@ fn test_prev_wrapped() {
   let size = Size::from_last_key(Sixteen::D);
   assert_eq!(size.prev_wrapped(Sixteen::A), Sixteen::D);
 }
+
+#[test]
+fn test_iter() {
+  let collected3: Vec<_> = Three::iter().collect();
+  assert_eq!(collected3, vec![Three::A, Three::B, Three::C]);
+}

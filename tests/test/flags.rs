@@ -11,4 +11,9 @@ fn test_flags() {
   assert_eq!(flags.any(), true);
   assert_eq!(flags.count(), 1);
   assert_eq!(flags.get(Three::B), true);
+  let collected: Vec<_> = flags.iter().collect();
+  assert_eq!(
+    collected,
+    vec![(Three::A, false), (Three::B, true), (Three::C, false)]
+  );
 }
