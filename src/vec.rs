@@ -41,8 +41,8 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
 
   pub fn as_slice(&self) -> &[V] {
     debug_assert!(
-      self.len < T::SIZE_WORD,
-      "Length out of bounds: {:?} >= {:?}",
+      self.len <= T::SIZE_WORD,
+      "Length out of bounds: {:?} > {:?}",
       self.len,
       T::SIZE
     );
@@ -55,8 +55,8 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
 
   pub fn as_slice_mut(&mut self) -> &mut [V] {
     debug_assert!(
-      self.len < T::SIZE_WORD,
-      "Length out of bounds: {:?} >= {:?}",
+      self.len <= T::SIZE_WORD,
+      "Length out of bounds: {:?} > {:?}",
       self.len,
       T::SIZE
     );
@@ -100,6 +100,13 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     T::partial_slice_mut(&mut self.data)[len] =
       mem::MaybeUninit::<V>::new(value);
     self.len = self.len + T::ONE_WORD;
+  }
+
+  pub fn pop(&mut self) -> V {
+    let i = self.len.as_() - 1;
+    let p = T::partial_slice_mut(&mut self.data)[i].as_mut_ptr();
+    self.len = self.len - T::ONE_WORD;
+    unsafe { ptr::read(p) }
   }
 
   #[inline]
