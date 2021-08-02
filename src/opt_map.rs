@@ -12,6 +12,7 @@ pub struct EnumOptionMap<T: EnumArrayHelper<V>, V> {
 }
 
 impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
+  /// Creates a new, empty `EnumOptionMap<T, V>`.
   pub fn new() -> Self {
     EnumOptionMap {
       valid: EnumFlags::<T>::new(),

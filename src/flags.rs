@@ -11,6 +11,7 @@ pub struct EnumFlags<T: Enumoid> {
 }
 
 impl<T: Enumoid> EnumFlags<T> {
+  /// Creates a new, unset `EnumFlags<T>`.
   pub fn new() -> Self {
     EnumFlags {
       data: T::DEFAULT_FLAGS,
