@@ -1,5 +1,13 @@
 # Changelog
 
+## Enumoid 0.2.1 (2021-08-02)
+
+### Added
+- Added pop function to EnumVec.
+
+### Changed
+- Fixed bad debug assertion in EnumVec's as_slice functions.
+
 ## Enumoid 0.2.0 (2021-07-21)
 
 ### Added
