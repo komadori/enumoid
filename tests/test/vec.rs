@@ -6,6 +6,7 @@ use enumoid::Size;
 fn test_vec() {
   let mut vec = EnumVec::<Three, u16>::new();
   assert_eq!(vec.size(), Size::EMPTY);
+  assert_eq!(vec.pop(), None);
   vec.push(100);
   vec.push(200);
   assert_eq!(vec[Three::A], 100);
@@ -13,7 +14,17 @@ fn test_vec() {
   assert_eq!(vec.size(), Size::from_last_key(Three::B));
   vec.push(300);
   assert_eq!(vec.size(), Size::from_last_key(Three::C));
-  vec.pop();
+  assert_eq!(vec.pop(), Some(300));
   let collected: Vec<_> = vec.iter().collect();
   assert_eq!(collected, vec![(Three::A, &100), (Three::B, &200)]);
+}
+
+#[test]
+#[should_panic(expected = "index out of bounds")]
+fn test_push_panic() {
+  let mut vec = EnumVec::<Three, u16>::new();
+  vec.push(100);
+  vec.push(200);
+  vec.push(300);
+  vec.push(400);
 }

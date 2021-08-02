@@ -102,11 +102,15 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     self.len = self.len + T::ONE_WORD;
   }
 
-  pub fn pop(&mut self) -> V {
-    let i = self.len.as_() - 1;
-    let p = T::partial_slice_mut(&mut self.data)[i].as_mut_ptr();
-    self.len = self.len - T::ONE_WORD;
-    unsafe { ptr::read(p) }
+  pub fn pop(&mut self) -> Option<V> {
+    if self.len.is_zero() {
+      None
+    } else {
+      let i = self.len.as_() - 1;
+      let p = T::partial_slice_mut(&mut self.data)[i].as_mut_ptr();
+      self.len = self.len - T::ONE_WORD;
+      Some(unsafe { ptr::read(p) })
+    }
   }
 
   #[inline]
