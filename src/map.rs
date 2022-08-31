@@ -138,9 +138,7 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator
   }
 }
 
-impl<'a, T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>>
-  for EnumMap<T, V>
-{
+impl<T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>> for EnumMap<T, V> {
   type Error = ();
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     if from.is_full() {

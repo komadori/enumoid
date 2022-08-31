@@ -205,9 +205,7 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator for &'a EnumVec<T, V> {
   }
 }
 
-impl<'a, T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>>
-  for EnumVec<T, V>
-{
+impl<T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>> for EnumVec<T, V> {
   type Error = ();
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     match from.is_vec() {
