@@ -1,6 +1,6 @@
 [package]
 name = "enumoid"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Robin KAY <komadori@gekkou.co.uk>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"

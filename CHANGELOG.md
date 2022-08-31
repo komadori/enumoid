@@ -1,5 +1,13 @@
 # Changelog
 
+## Enumoid 0.2.2 (2022-08-31)
+
+### Added
+- Added get_mut function to EnumMap, EnumOptionMap, and EnumVec.
+
+### Fixed
+- Fixed unwanted loop vectorisation over small backing arrays.
+
 ## Enumoid 0.2.1 (2021-08-02)
 
 ### Added
@@ -20,7 +28,7 @@
 - Improved performance.
 - Removed wrapped_add and checked_add functions.
 - Merged the EnumFlagsHelper trait into Enumoid.
-- Changed and hidden many members on the Enumoid and EnumArrayHelper traits.
+- Changed and hid many members on the Enumoid and EnumArrayHelper traits.
 
 ### Fixed
 - Fixed EnumFlags with more than 256 flags.
