@@ -20,12 +20,14 @@ impl<T: Enumoid> EnumFlags<T> {
 
   #[inline]
   pub(crate) fn set_internal(&mut self, i: T::Word, x: bool) {
-    debug_assert!(
-      i < T::SIZE_WORD,
-      "Index out of bounds: {:?} >= {:?}",
-      i,
-      T::SIZE
-    );
+    unsafe {
+      hint_assert!(
+        i < T::SIZE_WORD,
+        "Index out of bounds: {:?} >= {:?}",
+        i,
+        T::SIZE
+      );
+    }
     let j = (i / T::FLAGS_BITS_WORD).as_();
     let mask = 1 << (i % T::FLAGS_BITS_WORD).as_();
     let set = if x { mask } else { 0 };
@@ -44,12 +46,14 @@ impl<T: Enumoid> EnumFlags<T> {
 
   #[inline]
   pub(crate) fn get_internal(&self, i: T::Word) -> bool {
-    debug_assert!(
-      i < T::SIZE_WORD,
-      "Index out of bounds: {:?} >= {:?}",
-      i,
-      T::SIZE
-    );
+    unsafe {
+      hint_assert!(
+        i < T::SIZE_WORD,
+        "Index out of bounds: {:?} >= {:?}",
+        i,
+        T::SIZE
+      );
+    }
     let j = (i / T::FLAGS_BITS_WORD).as_();
     let slice = T::slice_flags(&self.data);
     let bits = unsafe { slice.get_unchecked(j) };

@@ -42,13 +42,13 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   pub fn as_slice(&self) -> &[V] {
-    debug_assert!(
-      self.len <= T::SIZE_WORD,
-      "Length out of bounds: {:?} > {:?}",
-      self.len,
-      T::SIZE
-    );
     unsafe {
+      hint_assert!(
+        self.len <= T::SIZE_WORD,
+        "Length out of bounds: {:?} > {:?}",
+        self.len,
+        T::SIZE
+      );
       let inited =
         T::partial_slice(&self.data).get_unchecked(0..self.len.as_());
       &*(inited as *const [std::mem::MaybeUninit<V>] as *const [V])
@@ -56,13 +56,13 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   pub fn as_slice_mut(&mut self) -> &mut [V] {
-    debug_assert!(
-      self.len <= T::SIZE_WORD,
-      "Length out of bounds: {:?} > {:?}",
-      self.len,
-      T::SIZE
-    );
     unsafe {
+      hint_assert!(
+        self.len <= T::SIZE_WORD,
+        "Length out of bounds: {:?} > {:?}",
+        self.len,
+        T::SIZE
+      );
       let inited = T::partial_slice_mut(&mut self.data)
         .get_unchecked_mut(0..self.len.as_());
       &mut *(inited as *mut [std::mem::MaybeUninit<V>] as *mut [V])

@@ -4,6 +4,15 @@ use std::iter::Iterator;
 use std::iter::Map;
 use std::mem;
 
+macro_rules! hint_assert {
+    ($x:expr, $($arg:tt)*) => {
+      debug_assert!($x, $($arg)*);
+      if !$x {
+        std::hint::unreachable_unchecked();
+      }
+    }
+}
+
 /// Iterator for Enumoids.
 pub type EnumoidIter<T> =
   Map<<T as Enumoid>::WordRange, fn(<T as Enumoid>::Word) -> T>;
@@ -23,7 +32,7 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub(crate) unsafe fn from_word_unchecked(value: T::Word) -> Self {
-    debug_assert!(
+    hint_assert!(
       value <= T::SIZE_WORD,
       "from_word_unchecked: Size out of bounds: {:?} >= {:?}",
       value,
