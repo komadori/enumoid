@@ -50,6 +50,10 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
     &self[key]
   }
 
+  pub fn get_mut(&mut self, key: T) -> &mut V {
+    &mut self[key]
+  }
+
   pub fn swap(&mut self, a: T, b: T) {
     self
       .as_slice_mut()

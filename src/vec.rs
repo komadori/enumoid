@@ -74,6 +74,11 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     self.as_slice().get(i.as_())
   }
 
+  pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
+    let i = T::into_word(key);
+    self.as_slice_mut().get_mut(i.as_())
+  }
+
   pub fn is_empty(&self) -> bool {
     self.len.is_zero()
   }

@@ -15,8 +15,11 @@ fn test_vec() {
   vec.push(300);
   assert_eq!(vec.size(), Size::from_last_key(Three::C));
   assert_eq!(vec.pop(), Some(300));
+  assert_eq!(vec.get(Three::C), None);
+  vec[Three::B] += 1;
+  assert_eq!(vec[Three::B], 201);
   let collected: Vec<_> = vec.iter().collect();
-  assert_eq!(collected, vec![(Three::A, &100), (Three::B, &200)]);
+  assert_eq!(collected, vec![(Three::A, &100), (Three::B, &201)]);
 }
 
 #[test]

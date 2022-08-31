@@ -29,6 +29,17 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
+  pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
+    let i = T::into_word(key);
+    if self.valid.get_internal(i) {
+      Some(unsafe {
+        &mut *T::partial_slice_mut(&mut self.data)[i.as_()].as_mut_ptr()
+      })
+    } else {
+      None
+    }
+  }
+
   pub fn set(&mut self, key: T, value: Option<V>) {
     let i = T::into_word(key);
     let cell = &mut T::partial_slice_mut(&mut self.data)[i.as_()];

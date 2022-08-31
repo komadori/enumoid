@@ -10,7 +10,8 @@ fn test_option_map() {
   map.set(Three::B, Some(200));
   assert_eq!(map.is_empty(), false);
   assert_eq!(map.is_vec(), None);
-  map.set(Three::A, Some(100));
+  map.set(Three::A, Some(99));
+  *map.get_mut(Three::A).unwrap() += 1;
   assert_eq!(map.is_full(), false);
   assert_eq!(map.is_vec(), Size::from_usize(2));
   map.set(Three::C, Some(300));

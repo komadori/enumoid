@@ -7,9 +7,11 @@ fn test_map() {
   assert_eq!(*map.get(Three::B), 0);
   map[Three::B] = 200;
   assert_eq!(*map.get(Three::B), 200);
+  *map.get_mut(Three::C) += 1;
+  assert_eq!(*map.get(Three::C), 1);
   let collected: Vec<_> = map.iter().collect();
   assert_eq!(
     collected,
-    vec![(Three::A, &0), (Three::B, &200), (Three::C, &0)]
+    vec![(Three::A, &0), (Three::B, &200), (Three::C, &1)]
   );
 }
