@@ -76,11 +76,29 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
     Some(unsafe { Size::<T>::from_word_unchecked(size) })
   }
+
+  pub(crate) fn into_partial(mut self) -> T::PartialArray {
+    self.valid.clear();
+    mem::replace(&mut self.data, T::new_partial())
+  }
 }
 
 impl<T: EnumArrayHelper<V>, V> Default for EnumOptionMap<T, V> {
   fn default() -> Self {
     EnumOptionMap::<T, V>::new()
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> Drop for EnumOptionMap<T, V> {
+  fn drop(&mut self) {
+    let data = T::partial_slice_mut(&mut self.data);
+    for key in T::iter() {
+      let word = key.into_word();
+      if self.valid.get_internal(word) {
+        let cell = &mut data[word.as_()];
+        unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
+      }
+    }
   }
 }
 

@@ -149,8 +149,9 @@ impl<T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>> for EnumMap<T, V> {
   type Error = ();
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     if from.is_full() {
+      let data = from.into_partial();
       Ok(EnumMap {
-        data: unsafe { T::partial_to_total(from.data) },
+        data: unsafe { T::partial_to_total(data) },
       })
     } else {
       Err(())

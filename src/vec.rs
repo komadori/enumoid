@@ -218,7 +218,7 @@ impl<T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>> for EnumVec<T, V> {
     match from.is_vec() {
       Some(size) => Ok(EnumVec {
         len: size.to_word(),
-        data: from.data,
+        data: from.into_partial(),
       }),
       None => Err(()),
     }
