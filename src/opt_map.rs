@@ -2,6 +2,7 @@ use crate::base::EnumArrayHelper;
 use crate::base::Size;
 use crate::flags::EnumFlags;
 use num_traits::AsPrimitive;
+use std::hash::Hash;
 use std::mem;
 use std::ptr;
 
@@ -80,5 +81,13 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
 impl<T: EnumArrayHelper<V>, V> Default for EnumOptionMap<T, V> {
   fn default() -> Self {
     EnumOptionMap::<T, V>::new()
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumOptionMap<T, V> {
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    for key in T::iter() {
+      self.get(key).hash(state);
+    }
   }
 }

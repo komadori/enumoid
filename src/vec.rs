@@ -7,6 +7,7 @@ use num_traits::{AsPrimitive, Zero};
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::iter;
 use std::mem;
 use std::ops::{Index, IndexMut};
@@ -168,6 +169,12 @@ impl<T: EnumArrayHelper<V>, V: Clone> Clone for EnumVec<T, V> {
       clone.push(value.clone())
     }
     clone
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumVec<T, V> {
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    self.as_slice().hash(state);
   }
 }
 

@@ -2,6 +2,7 @@ use crate::Enumoid;
 use num_traits::AsPrimitive;
 use std::fmt;
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
@@ -103,6 +104,12 @@ impl<T: Enumoid + Debug> Debug for EnumFlags<T> {
 impl<T: Enumoid> Default for EnumFlags<T> {
   fn default() -> Self {
     EnumFlags::<T>::new()
+  }
+}
+
+impl<T: Enumoid> Hash for EnumFlags<T> {
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    T::slice_flags(&self.data).hash(state);
   }
 }
 

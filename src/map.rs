@@ -6,6 +6,7 @@ use num_traits::AsPrimitive;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::iter;
 use std::mem;
 use std::ops::{Index, IndexMut};
@@ -99,6 +100,12 @@ impl<T: EnumArrayHelper<V> + Debug, V: Debug> Debug for EnumMap<T, V> {
 impl<T: EnumArrayHelper<V>, V: Default> Default for EnumMap<T, V> {
   fn default() -> Self {
     Self::new()
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumMap<T, V> {
+  fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    self.as_slice().hash(state);
   }
 }
 
