@@ -172,6 +172,14 @@ impl<T: EnumArrayHelper<V>, V: Clone> Clone for EnumVec<T, V> {
   }
 }
 
+impl<T: EnumArrayHelper<V>, V: PartialEq> PartialEq for EnumVec<T, V> {
+  fn eq(&self, other: &Self) -> bool {
+    self.as_slice() == other.as_slice()
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V: Eq> Eq for EnumVec<T, V> {}
+
 impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumVec<T, V> {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     self.as_slice().hash(state);

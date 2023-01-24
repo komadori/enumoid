@@ -21,13 +21,17 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
-  pub fn get(&self, key: T) -> Option<&V> {
-    let i = T::into_word(key);
+  #[inline]
+  pub(crate) fn get_internal(&self, i: T::Word) -> Option<&V> {
     if self.valid.get_internal(i) {
       Some(unsafe { &*T::partial_slice(&self.data)[i.as_()].as_ptr() })
     } else {
       None
     }
+  }
+
+  pub fn get(&self, key: T) -> Option<&V> {
+    self.get_internal(T::into_word(key))
   }
 
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
@@ -101,6 +105,20 @@ impl<T: EnumArrayHelper<V>, V> Drop for EnumOptionMap<T, V> {
     }
   }
 }
+
+impl<T: EnumArrayHelper<V>, V: PartialEq> PartialEq for EnumOptionMap<T, V> {
+  fn eq(&self, other: &Self) -> bool {
+    for key in T::iter() {
+      let i = key.into_word();
+      if self.get_internal(i) != other.get_internal(i) {
+        return false;
+      }
+    }
+    true
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V: Eq> Eq for EnumOptionMap<T, V> {}
 
 impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumOptionMap<T, V> {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

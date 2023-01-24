@@ -107,6 +107,14 @@ impl<T: Enumoid> Default for EnumFlags<T> {
   }
 }
 
+impl<T: Enumoid> PartialEq for EnumFlags<T> {
+  fn eq(&self, other: &Self) -> bool {
+    T::slice_flags(&self.data) == T::slice_flags(&other.data)
+  }
+}
+
+impl<T: Enumoid> Eq for EnumFlags<T> {}
+
 impl<T: Enumoid> Hash for EnumFlags<T> {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     T::slice_flags(&self.data).hash(state);
