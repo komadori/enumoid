@@ -1,5 +1,13 @@
 # Changelog
 
+## Enumoid 0.2.3 (2023-01-25)
+
+### Added
+- Added PartialEq, Eq, and Hash impls to all containers.
+
+### Fixed
+- Fixed missing Drop impl for EnumOptionMap.
+
 ## Enumoid 0.2.2 (2022-08-31)
 
 ### Added
