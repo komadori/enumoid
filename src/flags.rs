@@ -12,7 +12,7 @@ pub struct EnumFlags<T: Enumoid> {
 }
 
 impl<T: Enumoid> EnumFlags<T> {
-  /// Creates a new, unset `EnumFlags<T>`.
+  /// Creates a new empty set.
   pub fn new() -> Self {
     EnumFlags {
       data: T::DEFAULT_FLAGS,
@@ -37,10 +37,12 @@ impl<T: Enumoid> EnumFlags<T> {
     *bits = *bits & !mask | set;
   }
 
+  /// Sets whether a member is in the set.
   pub fn set(&mut self, e: T, x: bool) {
     self.set_internal(T::into_word(e), x)
   }
 
+  /// Clears all the members from the set.
   pub fn clear(&mut self) {
     self.data = T::DEFAULT_FLAGS;
   }
@@ -61,10 +63,12 @@ impl<T: Enumoid> EnumFlags<T> {
     (bits >> (i % T::FLAGS_BITS_WORD).as_()) & 1 == 1
   }
 
+  /// Returns true if a specific member is in the set.
   pub fn get(&self, e: T) -> bool {
     self.get_internal(T::into_word(e))
   }
 
+  /// Returns an iterator over the members of the set.
   pub fn iter(&self) -> EnumFlagsIter<T> {
     EnumFlagsIter {
       flags: self,
@@ -72,6 +76,7 @@ impl<T: Enumoid> EnumFlags<T> {
     }
   }
 
+  /// Returns the number of members in the set.
   pub fn count(&self) -> usize {
     let slice = T::slice_flags(&self.data);
     slice
@@ -79,11 +84,13 @@ impl<T: Enumoid> EnumFlags<T> {
       .fold(0, |acc, &val| acc + val.count_ones() as usize)
   }
 
+  /// Returns true if there are any members in the set.
   pub fn any(&self) -> bool {
     let slice = T::slice_flags(&self.data);
     slice.iter().any(|&val| val != 0)
   }
 
+  /// Returns true if all possible members are in the set.
   pub fn all(&self) -> bool {
     let slice = T::slice_flags(&self.data);
     let last = !0 >> (T::FLAGS_BITS - T::SIZE % T::FLAGS_BITS);

@@ -13,7 +13,7 @@ pub struct EnumOptionMap<T: EnumArrayHelper<V>, V> {
 }
 
 impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
-  /// Creates a new, empty `EnumOptionMap<T, V>`.
+  /// Creates a new empty map.
   pub fn new() -> Self {
     EnumOptionMap {
       valid: EnumFlags::<T>::new(),
@@ -30,10 +30,14 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
+  /// Returns a reference to the value associated with a given key,
+  /// or `None` if the key has no value in the map.
   pub fn get(&self, key: T) -> Option<&V> {
     self.get_internal(T::into_word(key))
   }
 
+  /// Returns a mutable reference to the value associated with a given key,
+  /// or `None` if the key has no value in the map.
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
     let i = T::into_word(key);
     if self.valid.get_internal(i) {
@@ -45,6 +49,7 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
+  /// Sets the value associated with a given key.
   pub fn set(&mut self, key: T, value: Option<V>) {
     let i = T::into_word(key);
     let cell = &mut T::partial_slice_mut(&mut self.data)[i.as_()];
@@ -57,14 +62,21 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
+  /// Returns true if the map is empty.
   pub fn is_empty(&self) -> bool {
     !self.valid.any()
   }
 
+  /// Returns true if the map is fully populated.
   pub fn is_full(&self) -> bool {
     self.valid.all()
   }
 
+  /// Returns the size of a vector needed to represent the map,
+  /// or `None` if the map is not representable by a vector.
+  /// 
+  /// A map is representable by vector if all the populated values
+  /// are contiguous with the first key, or if the map is empty.
   pub fn is_vec(&self) -> Option<Size<T>> {
     let mut seen_none = false;
     let mut size = T::ZERO_WORD;
