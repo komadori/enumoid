@@ -2,7 +2,7 @@
 name = "enumoid_derive"
 version = "0.3.0"
 authors = ["Robin KAY <komadori@gekkou.co.uk>"]
-edition = "2018"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Derive macro for Enum Indexed Containers"
 readme = "README.md"
