@@ -7,7 +7,7 @@ This crate is a Rust library which provides containers indexed by enums.
 
 ```toml
 [dependencies]
-enumoid = "0.2"
+enumoid = "0.3"
 ```
 
 # Using Enumoid
