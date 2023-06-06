@@ -74,7 +74,7 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
 
   /// Returns the size of a vector needed to represent the map,
   /// or `None` if the map is not representable by a vector.
-  /// 
+  ///
   /// A map is representable by vector if all the populated values
   /// are contiguous with the first key, or if the map is empty.
   pub fn is_vec(&self) -> Option<Size<T>> {
