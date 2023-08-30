@@ -61,6 +61,19 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     }
   }
 
+  /// Clears all the elements from the map.
+  pub fn clear(&mut self) {
+    let data = T::partial_slice_mut(&mut self.data);
+    for key in T::iter() {
+      let word = key.into_word();
+      if self.valid.get_internal(word) {
+        let cell = &mut data[word.as_()];
+        unsafe { cell.assume_init_drop() };
+      }
+    }
+    self.valid.clear();
+  }
+
   /// Returns true if the map is empty.
   pub fn is_empty(&self) -> bool {
     !self.valid.any()
@@ -106,14 +119,7 @@ impl<T: EnumArrayHelper<V>, V> Default for EnumOptionMap<T, V> {
 
 impl<T: EnumArrayHelper<V>, V> Drop for EnumOptionMap<T, V> {
   fn drop(&mut self) {
-    let data = T::partial_slice_mut(&mut self.data);
-    for key in T::iter() {
-      let word = key.into_word();
-      if self.valid.get_internal(word) {
-        let cell = &mut data[word.as_()];
-        unsafe { cell.assume_init_drop() };
-      }
-    }
+    self.clear()
   }
 }
 
