@@ -11,7 +11,6 @@ use std::hash::Hash;
 use std::iter;
 use std::mem;
 use std::ops::{Index, IndexMut};
-use std::ptr;
 
 /// A vector of values `V` indexed by enumoid `T`.
 pub struct EnumVec<T: EnumArrayHelper<V>, V> {
@@ -126,7 +125,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     for cell in
       T::partial_slice_mut(&mut self.data)[0..self.len.as_()].iter_mut()
     {
-      unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
+      unsafe { cell.assume_init_drop() };
     }
     self.len = T::ZERO_WORD;
   }
@@ -149,9 +148,9 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
       None
     } else {
       let i = self.len.as_() - 1;
-      let p = T::partial_slice_mut(&mut self.data)[i].as_mut_ptr();
+      let cell = &T::partial_slice_mut(&mut self.data)[i];
       self.len = self.len - T::ONE_WORD;
-      Some(unsafe { ptr::read(p) })
+      Some(unsafe { cell.assume_init_read() })
     }
   }
 
@@ -190,11 +189,7 @@ impl<T: EnumArrayHelper<V>, V> Default for EnumVec<T, V> {
 
 impl<T: EnumArrayHelper<V>, V> Drop for EnumVec<T, V> {
   fn drop(&mut self) {
-    for cell in
-      T::partial_slice_mut(&mut self.data)[0..self.len.as_()].iter_mut()
-    {
-      unsafe { ptr::drop_in_place(cell.as_mut_ptr()) };
-    }
+    self.clear()
   }
 }
 

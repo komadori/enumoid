@@ -8,7 +8,6 @@ use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter;
-use std::mem;
 use std::ops::{Index, IndexMut};
 
 /// A total map from enumoid `T` to values `V`.
@@ -32,7 +31,7 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
     let mut arr = T::new_partial();
     for (key, cell) in T::iter().zip(T::partial_slice_mut(&mut arr).iter_mut())
     {
-      *cell = mem::MaybeUninit::new(f(key));
+      cell.write(f(key));
     }
     EnumMap {
       data: unsafe { T::partial_to_total(arr) },
