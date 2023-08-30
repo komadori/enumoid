@@ -105,6 +105,22 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
       .swap(T::into_word(a).as_(), T::into_word(b).as_())
   }
 
+  /// Removes an element and returns it, replacing it with the last element.
+  ///
+  /// # Panics
+  /// Panics if `key` is beyond the end of the vector.
+  pub fn swap_remove(&mut self, key: T) -> V {
+    let index = T::into_word(key).as_();
+    assert!(index < self.len.as_());
+    let slice = T::partial_slice_mut(&mut self.data);
+    self.len = self.len - T::ONE_WORD;
+    unsafe {
+      let value = slice[index].assume_init_read();
+      slice[index].write(slice[self.len.as_()].assume_init_read());
+      value
+    }
+  }
+
   /// Clears all the elements from the vector.
   pub fn clear(&mut self) {
     for cell in

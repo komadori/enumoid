@@ -18,8 +18,9 @@ fn test_vec() {
   assert_eq!(vec.get(Three::C), None);
   vec[Three::B] += 1;
   assert_eq!(vec[Three::B], 201);
+  assert_eq!(vec.swap_remove(Three::A), 100);
   let collected: Vec<_> = vec.iter().collect();
-  assert_eq!(collected, vec![(Three::A, &100), (Three::B, &201)]);
+  assert_eq!(collected, vec![(Three::A, &201)]);
 }
 
 #[test]
