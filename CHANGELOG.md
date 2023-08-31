@@ -1,5 +1,17 @@
 # Changelog
 
+## Enumoid 0.3.0 (2023-08-31)
+
+### Added
+- Added swap_remove function to EnumVec.
+- Added clear function to EnumOptionMap.
+
+### Changed
+- Changed Option<Size> to Size in EnumVec::new_with.
+- Changed proc macro to use syn 2.0.
+- Removed dependency on num-traits.
+- Removed default features from serde dependency.
+
 ## Enumoid 0.2.3 (2023-01-25)
 
 ### Added
