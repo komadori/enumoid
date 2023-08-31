@@ -1,7 +1,7 @@
 use crate::base::EnumArrayHelper;
 use crate::base::Size;
 use crate::flags::EnumFlags;
-use num_traits::AsPrimitive;
+use crate::raw::RawIndex;
 use std::hash::Hash;
 use std::mem;
 
@@ -91,13 +91,13 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   /// are contiguous with the first key, or if the map is empty.
   pub fn is_vec(&self) -> Option<Size<T>> {
     let mut seen_none = false;
-    let mut size = T::ZERO_WORD;
+    let mut size = T::Word::ZERO;
     for (k, v) in self.valid.iter() {
       if v {
         if seen_none {
           return None;
         }
-        size = T::into_word(k) + T::ONE_WORD;
+        size = T::into_word(k).inc();
       } else {
         seen_none = true;
       }

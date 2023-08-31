@@ -1,5 +1,5 @@
 use crate::base::Enumoid;
-use num_traits::FromPrimitive;
+use crate::raw::RawIndex;
 use std::marker;
 use std::slice;
 
@@ -16,7 +16,7 @@ impl<'a, T: Enumoid, V> Iterator for EnumSliceIter<'a, T, V> {
   fn next(&mut self) -> Option<Self::Item> {
     let value = self.iter.next()?;
     let key = unsafe { T::from_word_unchecked(self.word) };
-    self.word = self.word + T::ONE_WORD;
+    self.word = self.word.inc();
     Some((key, value))
   }
 
@@ -31,8 +31,9 @@ impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIter<'a, T, V> {
   #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
     let value = self.iter.next_back()?;
-    let idx = self.word + T::Word::from_usize(self.iter.len()).unwrap();
-    let key = unsafe { T::from_word_unchecked(idx) };
+    let idx = self.word.as_() + self.iter.len();
+    let key =
+      unsafe { T::from_word_unchecked(T::Word::from_usize_unchecked(idx)) };
     Some((key, value))
   }
 }
@@ -50,7 +51,7 @@ impl<'a, T: Enumoid, V> Iterator for EnumSliceIterMut<'a, T, V> {
   fn next(&mut self) -> Option<Self::Item> {
     let value = self.iter.next()?;
     let key = unsafe { T::from_word_unchecked(self.word) };
-    self.word = self.word + T::ONE_WORD;
+    self.word = self.word.inc();
     Some((key, value))
   }
 
@@ -66,8 +67,9 @@ impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIterMut<'a, T, V> {
   #[inline]
   fn next_back(&mut self) -> Option<Self::Item> {
     let value = self.iter.next_back()?;
-    let idx = self.word + T::Word::from_usize(self.iter.len()).unwrap();
-    let key = unsafe { T::from_word_unchecked(idx) };
+    let idx = self.word.as_() + self.iter.len();
+    let key =
+      unsafe { T::from_word_unchecked(T::Word::from_usize_unchecked(idx)) };
     Some((key, value))
   }
 }

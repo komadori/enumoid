@@ -3,7 +3,7 @@ use crate::base::Size;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
-use num_traits::{AsPrimitive, Zero};
+use crate::raw::RawIndex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -22,7 +22,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   /// Creates a new vector with no elements.
   pub fn new() -> Self {
     EnumVec {
-      len: T::ZERO_WORD,
+      len: T::Word::ZERO,
       data: T::new_partial(),
     }
   }
@@ -86,7 +86,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
 
   /// Returns true if the vector is empty.
   pub fn is_empty(&self) -> bool {
-    self.len.is_zero()
+    self.len == T::Word::ZERO
   }
 
   /// Returns the size of the vector.
@@ -112,7 +112,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     let index = T::into_word(key).as_();
     assert!(index < self.len.as_());
     let slice = T::partial_slice_mut(&mut self.data);
-    self.len = self.len - T::ONE_WORD;
+    self.len = self.len.dec();
     unsafe {
       let value = slice[index].assume_init_read();
       slice[index].write(slice[self.len.as_()].assume_init_read());
@@ -127,7 +127,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     {
       unsafe { cell.assume_init_drop() };
     }
-    self.len = T::ZERO_WORD;
+    self.len = T::Word::ZERO;
   }
 
   /// Adds an element to the end of the vector.
@@ -138,18 +138,18 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     let len = self.len.as_();
     T::partial_slice_mut(&mut self.data)[len] =
       mem::MaybeUninit::<V>::new(value);
-    self.len = self.len + T::ONE_WORD;
+    self.len = self.len.inc();
   }
 
   /// Removes an element from the end of the vector and returns it,
   /// or `None` if the vector is empty.
   pub fn pop(&mut self) -> Option<V> {
-    if self.len.is_zero() {
+    if self.len == T::Word::ZERO {
       None
     } else {
       let i = self.len.as_() - 1;
       let cell = &T::partial_slice_mut(&mut self.data)[i];
-      self.len = self.len - T::ONE_WORD;
+      self.len = self.len.dec();
       Some(unsafe { cell.assume_init_read() })
     }
   }
@@ -159,7 +159,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   pub fn iter(&self) -> EnumSliceIter<T, V> {
     EnumSliceIter {
       _phantom: Default::default(),
-      word: T::ZERO_WORD,
+      word: T::Word::ZERO,
       iter: self.as_slice().iter(),
     }
   }
@@ -169,7 +169,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   pub fn iter_mut(&mut self) -> EnumSliceIterMut<T, V> {
     EnumSliceIterMut {
       _phantom: Default::default(),
-      word: T::ZERO_WORD,
+      word: T::Word::ZERO,
       iter: self.as_slice_mut().iter_mut(),
     }
   }

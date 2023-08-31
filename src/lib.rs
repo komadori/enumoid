@@ -6,6 +6,7 @@ mod flags;
 mod iter;
 mod map;
 mod opt_map;
+mod raw;
 #[cfg(feature = "serde")]
 mod serde;
 mod vec;

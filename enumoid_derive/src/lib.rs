@@ -56,11 +56,8 @@ pub fn derive_enumoid(
         type FlagsArray = [u8; #flag_bytes];
         const SIZE: usize = #elem_count_lit;
         const SIZE_WORD: #word_type = #elem_count_lit;
-        const ZERO_WORD: #word_type = 0;
-        const ONE_WORD: #word_type = 1;
         const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
         const FLAGS_BITS: usize = 8;
-        const FLAGS_BITS_WORD: #word_type = 8;
         #[inline]
         fn into_word(self) -> Self::Word {
           match self {

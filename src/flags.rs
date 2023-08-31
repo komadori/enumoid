@@ -1,5 +1,5 @@
+use crate::raw::RawIndex;
 use crate::Enumoid;
-use num_traits::AsPrimitive;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -29,8 +29,8 @@ impl<T: Enumoid> EnumFlags<T> {
         T::SIZE
       );
     }
-    let j = (i / T::FLAGS_BITS_WORD).as_();
-    let mask = 1 << (i % T::FLAGS_BITS_WORD).as_();
+    let j = i.as_() / T::FLAGS_BITS;
+    let mask = 1 << (i.as_() % T::FLAGS_BITS);
     let set = if x { mask } else { 0 };
     let slice = T::slice_flags_mut(&mut self.data);
     let bits = unsafe { slice.get_unchecked_mut(j) };
@@ -57,10 +57,10 @@ impl<T: Enumoid> EnumFlags<T> {
         T::SIZE
       );
     }
-    let j = (i / T::FLAGS_BITS_WORD).as_();
+    let j = i.as_() / T::FLAGS_BITS;
     let slice = T::slice_flags(&self.data);
     let bits = unsafe { slice.get_unchecked(j) };
-    (bits >> (i % T::FLAGS_BITS_WORD).as_()) & 1 == 1
+    (bits >> (i.as_() % T::FLAGS_BITS)) & 1 == 1
   }
 
   /// Returns true if a specific member is in the set.
@@ -72,7 +72,7 @@ impl<T: Enumoid> EnumFlags<T> {
   pub fn iter(&self) -> EnumFlagsIter<T> {
     EnumFlagsIter {
       flags: self,
-      iter: T::word_range(T::ZERO_WORD, T::SIZE_WORD),
+      iter: T::word_range(T::Word::ZERO, T::SIZE_WORD),
     }
   }
 

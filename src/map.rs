@@ -2,7 +2,7 @@ use crate::base::EnumArrayHelper;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
-use num_traits::AsPrimitive;
+use crate::raw::RawIndex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -70,7 +70,7 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   pub fn iter(&self) -> EnumSliceIter<T, V> {
     EnumSliceIter {
       _phantom: Default::default(),
-      word: T::ZERO_WORD,
+      word: T::Word::ZERO,
       iter: self.as_slice().iter(),
     }
   }
@@ -80,7 +80,7 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   pub fn iter_mut(&mut self) -> EnumSliceIterMut<T, V> {
     EnumSliceIterMut {
       _phantom: Default::default(),
-      word: T::ZERO_WORD,
+      word: T::Word::ZERO,
       iter: self.as_slice_mut().iter_mut(),
     }
   }

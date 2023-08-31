@@ -1,4 +1,4 @@
-use num_traits::{AsPrimitive, FromPrimitive, PrimInt};
+use crate::raw::RawIndex;
 use std::fmt::Debug;
 use std::iter::Iterator;
 use std::iter::Map;
@@ -22,12 +22,12 @@ pub type EnumoidIter<T> =
 pub struct Size<T: Enumoid>(T::Word);
 
 impl<T: Enumoid> Size<T> {
-  pub const EMPTY: Size<T> = Size(T::ZERO_WORD);
+  pub const EMPTY: Size<T> = Size(T::Word::ZERO);
   pub const FULL: Size<T> = Size(T::SIZE_WORD);
 
   #[inline]
   pub fn from_last_key(value: T) -> Self {
-    Size(value.into_word() + T::ONE_WORD)
+    Size(value.into_word().inc())
   }
 
   #[inline]
@@ -43,7 +43,7 @@ impl<T: Enumoid> Size<T> {
 
   pub fn from_usize(sz: usize) -> Option<Self> {
     if sz <= T::SIZE {
-      Some(Size(T::Word::from_usize(sz).unwrap()))
+      Some(Size(T::Word::from_usize_unchecked(sz)))
     } else {
       None
     }
@@ -61,8 +61,8 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub fn last_key(&self) -> Option<T> {
-    if self.0 > T::ZERO_WORD {
-      Some(unsafe { T::from_word_unchecked(self.0 - T::ONE_WORD) })
+    if self.0 > T::Word::ZERO {
+      Some(unsafe { T::from_word_unchecked(self.0.dec()) })
     } else {
       None
     }
@@ -70,7 +70,7 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub fn next(&self, value: T) -> Option<T> {
-    let w = value.into_word() + T::ONE_WORD;
+    let w = value.into_word().inc();
     if w < self.to_word() {
       Some(unsafe { T::from_word_unchecked(w) })
     } else {
@@ -85,28 +85,28 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub fn next_wrapped(&self, value: T) -> T {
-    let w = value.into_word() + T::ONE_WORD;
-    let q = if w < self.to_word() { w } else { T::ZERO_WORD };
+    let w = value.into_word().inc();
+    let q = if w < self.to_word() { w } else { T::Word::ZERO };
     unsafe { T::from_word_unchecked(q) }
   }
 
   #[inline]
   pub fn prev_wrapped(&self, value: T) -> T {
     let w = value.into_word();
-    let q = if w > T::ZERO_WORD { w } else { self.to_word() } - T::ONE_WORD;
+    let q = if w > T::Word::ZERO { w } else { self.to_word() }.dec();
     unsafe { T::from_word_unchecked(q) }
   }
 
   #[inline]
   pub fn iter(&self) -> EnumoidIter<T> {
-    T::word_range(T::ZERO_WORD, self.to_word())
+    T::word_range(T::Word::ZERO, self.to_word())
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w + T::ONE_WORD < self.to_word() {
+    if w.inc() < self.to_word() {
       unsafe { Size::from_word_unchecked(w) }.iter()
     } else {
       self.iter()
@@ -122,7 +122,7 @@ impl<T: Enumoid> Size<T> {
   #[inline]
   pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w + T::ONE_WORD < self.to_word() {
+    if w.inc() < self.to_word() {
       unsafe { Size::from_word_unchecked(w) }.iter_from(from)
     } else {
       self.iter_from(from)
@@ -134,7 +134,7 @@ impl<T: Enumoid> Size<T> {
 ///
 /// Some members are hidden. Impls should only be defined via the `Enumoid` derive macro.
 pub trait Enumoid: Sized {
-  type Word: AsPrimitive<usize> + FromPrimitive + PrimInt + Debug;
+  type Word: RawIndex;
   const SIZE: usize;
   fn into_word(self) -> Self::Word;
 
@@ -145,15 +145,9 @@ pub trait Enumoid: Sized {
   #[doc(hidden)]
   const SIZE_WORD: Self::Word;
   #[doc(hidden)]
-  const ZERO_WORD: Self::Word;
-  #[doc(hidden)]
-  const ONE_WORD: Self::Word;
-  #[doc(hidden)]
   const DEFAULT_FLAGS: Self::FlagsArray;
   #[doc(hidden)]
   const FLAGS_BITS: usize;
-  #[doc(hidden)]
-  const FLAGS_BITS_WORD: Self::Word;
   /// # Safety
   /// The input word must be less than SIZE.
   #[doc(hidden)]
@@ -182,8 +176,8 @@ pub trait Enumoid: Sized {
   #[inline]
   fn prev(self) -> Option<Self> {
     let w = self.into_word();
-    if w > Self::ZERO_WORD {
-      Some(unsafe { Self::from_word_unchecked(w - Self::ONE_WORD) })
+    if w > Self::Word::ZERO {
+      Some(unsafe { Self::from_word_unchecked(w.dec()) })
     } else {
       None
     }
