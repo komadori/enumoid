@@ -125,6 +125,11 @@ impl<T: Enumoid> Size<T> {
   }
 
   #[inline]
+  pub fn is_valid(&self, value: T) -> bool {
+    value.into_word() < self.0
+  }
+
+  #[inline]
   pub fn iter(&self) -> EnumoidIter<T> {
     T::word_range(T::Word::ZERO, self.0)
       .map(|w| unsafe { T::from_word_unchecked(w) })
