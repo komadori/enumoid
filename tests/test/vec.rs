@@ -2,6 +2,8 @@ use crate::test::types::Three;
 use enumoid::EnumVec;
 use enumoid::Size;
 
+use super::types::Sixteen;
+
 #[test]
 fn test_vec() {
   let mut vec = EnumVec::<Three, u16>::new();
@@ -18,9 +20,34 @@ fn test_vec() {
   assert_eq!(vec.get(Three::C), None);
   vec[Three::B] += 1;
   assert_eq!(vec[Three::B], 201);
-  assert_eq!(vec.swap_remove(Three::A), 100);
   let collected: Vec<_> = vec.iter().collect();
-  assert_eq!(collected, vec![(Three::A, &201)]);
+  assert_eq!(collected, vec![(Three::A, &100), (Three::B, &201)]);
+}
+
+#[test]
+fn test_swap() {
+  let mut vec: EnumVec<Sixteen, u16> = [1, 2, 3, 4, 5].into_iter().collect();
+  vec.swap(Sixteen::B, Sixteen::D);
+  let collected: Vec<u16> = vec.iter().map(|x| *x.1).collect();
+  assert_eq!(collected, vec![1, 4, 3, 2, 5]);
+}
+
+#[test]
+fn test_swap_remove() {
+  let mut vec: EnumVec<Sixteen, u16> = [1, 2, 3, 4, 5].into_iter().collect();
+  assert_eq!(vec.swap_remove(Sixteen::F), None);
+  assert_eq!(vec.swap_remove(Sixteen::B), Some(2));
+  let collected: Vec<u16> = vec.iter().map(|x| *x.1).collect();
+  assert_eq!(collected, vec![1, 5, 3, 4]);
+}
+
+#[test]
+fn test_remove() {
+  let mut vec: EnumVec<Sixteen, u16> = [1, 2, 3, 4, 5].into_iter().collect();
+  assert_eq!(vec.remove(Sixteen::F), None);
+  assert_eq!(vec.remove(Sixteen::B), Some(2));
+  let collected: Vec<u16> = vec.iter().map(|x| *x.1).collect();
+  assert_eq!(collected, vec![1, 3, 4, 5]);
 }
 
 #[test]

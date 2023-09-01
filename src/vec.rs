@@ -11,6 +11,7 @@ use std::hash::Hash;
 use std::iter;
 use std::mem;
 use std::ops::{Index, IndexMut};
+use std::ptr;
 
 /// A vector of values `V` indexed by enumoid `T`.
 pub struct EnumVec<T: EnumArrayHelper<V>, V> {
@@ -110,18 +111,36 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   /// Removes an element and returns it, replacing it with the last element.
-  ///
-  /// # Panics
-  /// Panics if `key` is beyond the end of the vector.
-  pub fn swap_remove(&mut self, key: T) -> V {
+  pub fn swap_remove(&mut self, key: T) -> Option<V> {
     let index = T::into_word(key).as_();
-    assert!(index < self.len.as_());
-    let slice = T::partial_slice_mut(&mut self.data);
-    self.len = self.len.dec();
-    unsafe {
-      let value = slice[index].assume_init_read();
-      slice[index].write(slice[self.len.as_()].assume_init_read());
-      value
+    if index < self.len.as_() {
+      let slice = T::partial_slice_mut(&mut self.data);
+      self.len = self.len.dec();
+      unsafe {
+        let value = slice[index].assume_init_read();
+        slice[index].write(slice[self.len.as_()].assume_init_read());
+        Some(value)
+      }
+    } else {
+      None
+    }
+  }
+
+  /// Removes an element and returns it.
+  pub fn remove(&mut self, key: T) -> Option<V> {
+    let index = T::into_word(key).as_();
+    if index < self.len.as_() {
+      let slice = T::partial_slice_mut(&mut self.data);
+      let value = unsafe {
+        let value = slice[index].assume_init_read();
+        let ptr = slice.as_mut_ptr().add(index);
+        ptr::copy(ptr.add(1), ptr, self.len.as_() - index - 1);
+        value
+      };
+      self.len = self.len.dec();
+      Some(value)
+    } else {
+      None
     }
   }
 
