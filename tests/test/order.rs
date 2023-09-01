@@ -33,7 +33,6 @@ fn test_next_boundary() {
   assert_eq!(Seventeen::Q.next(), None);
   let size = Size::from_last_key(Sixteen::D);
   assert_eq!(size.next(Sixteen::D), None);
-  assert_eq!(size.next(Sixteen::E), None);
 }
 
 #[test]
@@ -43,7 +42,6 @@ fn test_next_wrapped() {
   assert_eq!(Seventeen::Q.next_wrapped(), Seventeen::A);
   let size = Size::from_last_key(Sixteen::D);
   assert_eq!(size.next_wrapped(Sixteen::D), Sixteen::A);
-  assert_eq!(size.next_wrapped(Sixteen::E), Sixteen::A);
 }
 
 #[test]

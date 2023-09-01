@@ -68,45 +68,72 @@ impl<T: Enumoid> Size<T> {
     }
   }
 
+  /// Returns the next element or None.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
   #[inline]
   pub fn next(&self, value: T) -> Option<T> {
-    let w = value.into_word().inc();
-    if w < self.to_word() {
-      Some(unsafe { T::from_word_unchecked(w) })
+    let w = value.into_word();
+    assert!(w < self.0);
+    let nw = w.inc();
+    if nw < self.0 {
+      Some(unsafe { T::from_word_unchecked(nw) })
     } else {
       None
     }
   }
 
+  /// Returns the previous element or None.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
   #[inline]
   pub fn prev(&self, value: T) -> Option<T> {
-    value.prev()
+    let w = value.into_word();
+    assert!(w < self.0);
+    if w > T::Word::ZERO {
+      Some(unsafe { T::from_word_unchecked(w.dec()) })
+    } else {
+      None
+    }
   }
 
+  /// Returns the next element or wraps around to the beginning.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
   #[inline]
   pub fn next_wrapped(&self, value: T) -> T {
-    let w = value.into_word().inc();
-    let q = if w < self.to_word() { w } else { T::Word::ZERO };
+    let w = value.into_word();
+    assert!(w < self.0);
+    let nw = w.inc();
+    let q = if nw < self.0 { nw } else { T::Word::ZERO };
     unsafe { T::from_word_unchecked(q) }
   }
 
+  /// Returns the previous element or wraps around to the end.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
   #[inline]
   pub fn prev_wrapped(&self, value: T) -> T {
     let w = value.into_word();
-    let q = if w > T::Word::ZERO { w } else { self.to_word() }.dec();
+    assert!(w < self.0);
+    let q = if w > T::Word::ZERO { w } else { self.0 }.dec();
     unsafe { T::from_word_unchecked(q) }
   }
 
   #[inline]
   pub fn iter(&self) -> EnumoidIter<T> {
-    T::word_range(T::Word::ZERO, self.to_word())
+    T::word_range(T::Word::ZERO, self.0)
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w.inc() < self.to_word() {
+    if w.inc() < self.0 {
       unsafe { Size::from_word_unchecked(w) }.iter()
     } else {
       self.iter()
@@ -115,14 +142,14 @@ impl<T: Enumoid> Size<T> {
 
   #[inline]
   pub fn iter_from(&self, from: T) -> EnumoidIter<T> {
-    T::word_range(from.into_word(), self.to_word())
+    T::word_range(from.into_word(), self.0)
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
   pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
-    if w.inc() < self.to_word() {
+    if w.inc() < self.0 {
       unsafe { Size::from_word_unchecked(w) }.iter_from(from)
     } else {
       self.iter_from(from)
@@ -175,12 +202,7 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn prev(self) -> Option<Self> {
-    let w = self.into_word();
-    if w > Self::Word::ZERO {
-      Some(unsafe { Self::from_word_unchecked(w.dec()) })
-    } else {
-      None
-    }
+    Size::FULL.prev(self)
   }
 
   #[inline]
