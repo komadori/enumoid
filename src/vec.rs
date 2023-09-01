@@ -89,6 +89,11 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     self.len == T::Word::ZERO
   }
 
+  /// Returns true if the vector is fully populated.
+  pub fn is_full(&self) -> bool {
+    self.len == T::SIZE_WORD
+  }
+
   /// Returns the size of the vector.
   pub fn size(&self) -> Size<T> {
     unsafe { Size::<T>::from_word_unchecked(self.len) }
