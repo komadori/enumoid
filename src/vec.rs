@@ -95,6 +95,11 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     self.len == T::SIZE_WORD
   }
 
+  /// Returns true if the vector contains the key.
+  pub fn contains(&self, value: T) -> bool {
+    value.into_word() < self.len
+  }
+
   /// Returns the size of the vector.
   pub fn size(&self) -> Size<T> {
     unsafe { Size::<T>::from_word_unchecked(self.len) }

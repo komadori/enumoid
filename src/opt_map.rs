@@ -105,6 +105,11 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
     Some(unsafe { Size::<T>::from_word_unchecked(size) })
   }
 
+  /// Returns true if the map contains the key.
+  pub fn contains(&self, value: T) -> bool {
+    self.valid.get(value)
+  }
+
   pub(crate) fn into_partial(mut self) -> T::PartialArray {
     self.valid.clear();
     mem::replace(&mut self.data, T::new_partial())

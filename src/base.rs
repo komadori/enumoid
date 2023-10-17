@@ -125,7 +125,7 @@ impl<T: Enumoid> Size<T> {
   }
 
   #[inline]
-  pub fn is_valid(&self, value: T) -> bool {
+  pub fn contains(&self, value: T) -> bool {
     value.into_word() < self.0
   }
 
