@@ -244,12 +244,14 @@ impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumVec<T, V> {
 impl<T: EnumArrayHelper<V>, V> Index<T> for EnumVec<T, V> {
   type Output = V;
 
+  #[inline]
   fn index(&self, i: T) -> &V {
     &self.as_slice()[T::into_word(i).as_()]
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumVec<T, V> {
+  #[inline]
   fn index_mut(&mut self, i: T) -> &mut V {
     &mut self.as_slice_mut()[T::into_word(i).as_()]
   }

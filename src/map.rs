@@ -126,12 +126,14 @@ impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumMap<T, V> {
 impl<T: EnumArrayHelper<V>, V> Index<T> for EnumMap<T, V> {
   type Output = V;
 
+  #[inline]
   fn index(&self, i: T) -> &V {
     unsafe { self.as_slice().get_unchecked(T::into_word(i).as_()) }
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumMap<T, V> {
+  #[inline]
   fn index_mut(&mut self, i: T) -> &mut V {
     unsafe { self.as_slice_mut().get_unchecked_mut(T::into_word(i).as_()) }
   }
