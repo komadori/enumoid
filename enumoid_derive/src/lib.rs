@@ -66,7 +66,6 @@ fn try_derive_enumoid(
       "Index type '{}' is too narrow for {} values.",
       word_type, elem_count
     );
-    let flag_bytes = (elem_count + 7) / 8;
     let elem_count_lit = proc_macro2::Literal::usize_unsuffixed(elem_count);
     let variant_names: Vec<&proc_macro2::Ident> =
       data_enum.variants.iter().map(|x| &x.ident).collect();
@@ -79,7 +78,7 @@ fn try_derive_enumoid(
       impl enumoid::Enumoid for #name {
         type Word = #word_type;
         type WordRange = std::ops::Range<#word_type>;
-        type FlagsArray = [u8; #flag_bytes];
+        type FlagsArray = [u8; Self::FLAGS_WORDS];
         const SIZE: usize = #elem_count_lit;
         const SIZE_WORD: #word_type = if Self::SIZE <= #word_type::MAX as usize {
           #elem_count_lit
@@ -90,8 +89,8 @@ fn try_derive_enumoid(
         };
         const FIRST: Self = #name::#first_variant;
         const LAST: Self = #name::#last_variant;
-        const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
         const FLAGS_BITS: usize = 8;
+        const DEFAULT_FLAGS: Self::FlagsArray = [0; Self::FLAGS_WORDS];
         #[inline]
         fn into_word(self) -> Self::Word {
           match self {

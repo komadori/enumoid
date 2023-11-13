@@ -179,9 +179,12 @@ pub trait Enumoid: Sized {
   #[doc(hidden)]
   const SIZE_WORD: Self::Word;
   #[doc(hidden)]
-  const DEFAULT_FLAGS: Self::FlagsArray;
-  #[doc(hidden)]
   const FLAGS_BITS: usize;
+  #[doc(hidden)]
+  const FLAGS_WORDS: usize =
+    (Self::SIZE + Self::FLAGS_BITS - 1) / Self::FLAGS_BITS;
+  #[doc(hidden)]
+  const DEFAULT_FLAGS: Self::FlagsArray;
   /// # Safety
   /// The input word must be less than SIZE.
   #[doc(hidden)]
