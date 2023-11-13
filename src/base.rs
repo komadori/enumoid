@@ -168,6 +168,8 @@ impl<T: Enumoid> Size<T> {
 pub trait Enumoid: Sized {
   type Word: RawIndex;
   const SIZE: usize;
+  const FIRST: Self;
+  const LAST: Self;
   fn into_word(self) -> Self::Word;
 
   #[doc(hidden)]
@@ -239,12 +241,6 @@ pub trait Enumoid: Sized {
   fn iter_from_until(from: Self, until: Self) -> EnumoidIter<Self> {
     Size::from_last_key(until).iter_from(from)
   }
-}
-
-/// Trait for enumerable types with at least one value.
-pub trait Enumoid1: Enumoid {
-  const FIRST: Self;
-  const LAST: Self;
 }
 
 /// Workaround for const generics not supporting associated consts yet.

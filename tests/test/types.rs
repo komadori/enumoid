@@ -1,9 +1,6 @@
 use enumoid::Enumoid;
 
 #[derive(Debug, Enumoid, PartialEq)]
-pub enum Zero {}
-
-#[derive(Debug, Enumoid, PartialEq)]
 pub enum Three {
   A,
   B,

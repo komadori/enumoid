@@ -13,7 +13,6 @@ mod vec;
 
 pub use base::EnumArrayHelper;
 pub use base::Enumoid;
-pub use base::Enumoid1;
 pub use base::Size;
 pub use flags::EnumFlags;
 pub use map::EnumMap;

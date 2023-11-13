@@ -59,6 +59,9 @@ fn try_derive_enumoid(
   if let syn::Data::Enum(data_enum) = input.data {
     let name = input.ident;
     let elem_count = data_enum.variants.len();
+    if elem_count == 0 {
+      bail!("Enumoids must be inhabited by at least one value.");
+    }
     let word_type_error = format!(
       "Index type '{}' is too narrow for {} values.",
       word_type, elem_count
@@ -70,18 +73,8 @@ fn try_derive_enumoid(
     let indices: Vec<_> = (0..elem_count)
       .map(proc_macro2::Literal::usize_unsuffixed)
       .collect();
-    let bounded = if variant_names.is_empty() {
-      quote! {}
-    } else {
-      let first_variant = variant_names.first().unwrap();
-      let last_variant = variant_names.last().unwrap();
-      quote! {
-        impl enumoid::Enumoid1 for #name {
-          const FIRST: Self = #name::#first_variant;
-          const LAST: Self = #name::#last_variant;
-        }
-      }
-    };
+    let first_variant = variant_names.first().unwrap();
+    let last_variant = variant_names.last().unwrap();
     Ok(quote! {
       impl enumoid::Enumoid for #name {
         type Word = #word_type;
@@ -95,6 +88,8 @@ fn try_derive_enumoid(
         {
           panic!(#word_type_error);
         };
+        const FIRST: Self = #name::#first_variant;
+        const LAST: Self = #name::#last_variant;
         const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
         const FLAGS_BITS: usize = 8;
         #[inline]
@@ -129,7 +124,6 @@ fn try_derive_enumoid(
         #[inline(always)]
         fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8] { arr }
       }
-      #bounded
       impl<V> enumoid::EnumArrayHelper<V> for #name {
         type PartialArray = [std::mem::MaybeUninit<V>; #elem_count];
         type TotalArray = [V; #elem_count];

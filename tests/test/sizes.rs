@@ -1,4 +1,4 @@
-use crate::test::types::{Seventeen, Sixteen, Three, ThreeHundred, Zero};
+use crate::test::types::{Seventeen, Sixteen, Three, ThreeHundred};
 use enumoid::EnumArrayHelper;
 use enumoid::EnumFlags;
 use enumoid::EnumMap;
@@ -22,11 +22,6 @@ fn test_type<T: EnumArrayHelper<u8>>(
     flags_bytes + variants
   );
   assert_eq!(std::mem::size_of::<EnumVec<T, u8>>(), word_bytes + variants);
-}
-
-#[test]
-fn test_zero() {
-  test_type::<Zero>(0, 0, 1, 0);
 }
 
 #[test]

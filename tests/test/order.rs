@@ -1,5 +1,5 @@
 use crate::test::types::{Seventeen, Sixteen, Three};
-use enumoid::{Enumoid, Enumoid1, Size};
+use enumoid::{Enumoid, Size};
 
 #[test]
 fn test_first() {
