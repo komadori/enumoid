@@ -9,28 +9,61 @@
 //! # fn main() {}
 //! ```
 
+use anyhow::{bail, Result};
+use quote::ToTokens;
+
 extern crate proc_macro;
 extern crate proc_macro2;
 #[macro_use]
 extern crate quote;
 extern crate syn;
 
-/// Derive macro which implements the `Enumoid` trait
-#[proc_macro_derive(Enumoid)]
-pub fn derive_enumoid(
+fn get_index_type(
+  input: &syn::DeriveInput,
+) -> Result<proc_macro2::TokenStream> {
+  for attr in input.attrs.iter() {
+    if attr.path().is_ident("index_type") {
+      return match attr.parse_args() {
+        Ok(syn::TypePath { path, .. }) if path.is_ident("u8") => {
+          Ok(quote! { u8 })
+        }
+        Ok(syn::TypePath { path, .. }) if path.is_ident("u16") => {
+          Ok(quote! { u16 })
+        }
+        Ok(syn::TypePath { path, .. }) if path.is_ident("u32") => {
+          Ok(quote! { u32 })
+        }
+        Ok(syn::TypePath { path, .. }) if path.is_ident("usize") => {
+          Ok(quote! { usize })
+        }
+        Ok(e) => {
+          bail!(
+            "Invalid argument to index_type attribute: {}",
+            e.into_token_stream()
+          );
+        }
+        Err(e) => {
+          bail!("Error parsing arguments to index_type attribute: {}", e);
+        }
+      };
+    }
+  }
+  Ok(quote! { u8 })
+}
+
+fn try_derive_enumoid(
   input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
+) -> Result<proc_macro2::TokenStream> {
   let input: syn::DeriveInput = syn::parse(input).unwrap();
-  let output = if let syn::Data::Enum(data_enum) = input.data {
+  let word_type = get_index_type(&input)?;
+  if let syn::Data::Enum(data_enum) = input.data {
     let name = input.ident;
     let elem_count = data_enum.variants.len();
+    let word_type_error = format!(
+      "Index type '{}' is too narrow for {} values.",
+      word_type, elem_count
+    );
     let flag_bytes = (elem_count + 7) / 8;
-    let word_type = match elem_count {
-      0..=0xff => quote! { u8 },
-      0x100..=0xffff => quote! { u16 },
-      0x10000..=0xffffffff => quote! { u32 },
-      _ => quote! { usize },
-    };
     let elem_count_lit = proc_macro2::Literal::usize_unsuffixed(elem_count);
     let variant_names: Vec<&proc_macro2::Ident> =
       data_enum.variants.iter().map(|x| &x.ident).collect();
@@ -49,13 +82,19 @@ pub fn derive_enumoid(
         }
       }
     };
-    quote! {
+    Ok(quote! {
       impl enumoid::Enumoid for #name {
         type Word = #word_type;
         type WordRange = std::ops::Range<#word_type>;
         type FlagsArray = [u8; #flag_bytes];
         const SIZE: usize = #elem_count_lit;
-        const SIZE_WORD: #word_type = #elem_count_lit;
+        const SIZE_WORD: #word_type = if Self::SIZE <= #word_type::MAX as usize {
+          #elem_count_lit
+        }
+        else
+        {
+          panic!(#word_type_error);
+        };
         const DEFAULT_FLAGS: Self::FlagsArray = [0; #flag_bytes];
         const FLAGS_BITS: usize = 8;
         #[inline]
@@ -119,9 +158,23 @@ pub fn derive_enumoid(
           p
         }
       }
-    }
+    })
   } else {
-    quote!(compile_error! {"#[derive(Enumoid)] can only be applied to enums"})
-  };
-  output.into()
+    bail!("#[derive(Enumoid)] can only be applied to enums");
+  }
+}
+
+/// Derive macro which implements the `Enumoid` trait
+#[proc_macro_derive(Enumoid, attributes(index_type))]
+pub fn derive_enumoid(
+  input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+  match try_derive_enumoid(input) {
+    Ok(q) => q,
+    Err(e) => {
+      let msg = e.to_string();
+      quote! { compile_error!(#msg); }
+    }
+  }
+  .into()
 }

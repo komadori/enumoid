@@ -52,6 +52,7 @@ pub enum Seventeen {
 }
 
 #[derive(Debug, Enumoid, PartialEq)]
+#[index_type(u16)]
 pub enum ThreeHundred {
   A1,
   A2,
