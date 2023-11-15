@@ -8,20 +8,6 @@ pub trait RawIndex: Copy + Debug + Eq + Ord {
   fn from_usize_unchecked(x: usize) -> Self;
 }
 
-impl RawIndex for () {
-  const ZERO: Self = ();
-  #[inline(always)]
-  fn inc(self) -> Self {}
-  #[inline(always)]
-  fn dec(self) -> Self {}
-  #[inline(always)]
-  fn as_(self) -> usize {
-    0
-  }
-  #[inline(always)]
-  fn from_usize_unchecked(_x: usize) -> Self {}
-}
-
 macro_rules! impl_raw_index {
   ($t: ty) => {
     impl RawIndex for $t {
