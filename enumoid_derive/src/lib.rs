@@ -81,7 +81,7 @@ fn try_derive_enumoid(
         type FlagsArray = [u8; Self::FLAGS_WORDS];
         const SIZE: usize = #elem_count_lit;
         const SIZE_WORD: #word_type = if Self::SIZE <= #word_type::MAX as usize {
-          #elem_count_lit
+          Self::SIZE as #word_type
         }
         else
         {
