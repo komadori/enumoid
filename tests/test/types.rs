@@ -8,6 +8,36 @@ pub enum Three {
 }
 
 #[derive(Debug, Enumoid, PartialEq)]
+#[index_type(u32)]
+pub enum WideThree {
+  A,
+  B,
+  C,
+}
+
+#[derive(Debug, Enumoid, PartialEq)]
+pub enum CompoundSeven {
+  X(Three),
+  Y,
+  Z(Three),
+}
+
+#[derive(Debug, Enumoid, PartialEq)]
+pub enum CompoundOnWideSeven {
+  X(WideThree),
+  Y,
+  Z(WideThree),
+}
+
+#[derive(Debug, Enumoid, PartialEq)]
+#[index_type(u32)]
+pub enum CompoundWideOnSeven {
+  X(Three),
+  Y,
+  Z(Three),
+}
+
+#[derive(Debug, Enumoid, PartialEq)]
 pub enum Sixteen {
   A,
   B,
