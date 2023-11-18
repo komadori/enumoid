@@ -1,4 +1,4 @@
-//! This crate is a Rust library which provides containers indexed by enums.
+#![doc = include_str!("../README.md")]
 
 #[macro_use]
 mod base;
