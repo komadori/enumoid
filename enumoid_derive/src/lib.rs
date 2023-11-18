@@ -137,6 +137,7 @@ fn try_derive_enumoid(
     impl enumoid::Enumoid for #name {
       type Word = #word_type;
       type WordRange = std::ops::Range<Self::Word>;
+      type BitsetWord = u8;
       type BitsetArray = [u8; Self::BITSET_WORDS];
       const SIZE: usize = #size;
       const SIZE_WORD: Self::Word = if Self::SIZE <= #word_type::MAX as usize {

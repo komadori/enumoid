@@ -5,10 +5,10 @@ mod base;
 mod iter;
 mod map;
 mod opt_map;
-mod raw;
 #[cfg(feature = "serde")]
 mod serde;
 mod set;
+mod sub_base;
 mod vec;
 
 pub use base::EnumArrayHelper;

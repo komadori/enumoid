@@ -1,7 +1,7 @@
 use crate::base::EnumArrayHelper;
 use crate::base::EnumSize;
-use crate::raw::RawIndex;
 use crate::set::EnumSet;
+use crate::sub_base::RawSizeWord;
 use std::hash::Hash;
 use std::mem;
 

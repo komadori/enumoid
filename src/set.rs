@@ -1,4 +1,5 @@
-use crate::raw::RawIndex;
+use crate::sub_base::RawBitsetWord;
+use crate::sub_base::RawSizeWord;
 use crate::Enumoid;
 use std::fmt;
 use std::fmt::Debug;
@@ -30,8 +31,8 @@ impl<T: Enumoid> EnumSet<T> {
       );
     }
     let j = i.as_() / T::BITSET_WORD_BITS;
-    let mask = 1 << (i.as_() % T::BITSET_WORD_BITS);
-    let set = if x { mask } else { 0 };
+    let mask = T::BitsetWord::ONE << (i.as_() % T::BITSET_WORD_BITS);
+    let set = if x { mask } else { T::BitsetWord::ZERO };
     let slice = T::slice_bitset_mut(&mut self.data);
     let bits = unsafe { slice.get_unchecked_mut(j) };
     *bits = *bits & !mask | set;
@@ -59,8 +60,9 @@ impl<T: Enumoid> EnumSet<T> {
     }
     let j = i.as_() / T::BITSET_WORD_BITS;
     let slice = T::slice_bitset(&self.data);
-    let bits = unsafe { slice.get_unchecked(j) };
-    (bits >> (i.as_() % T::BITSET_WORD_BITS)) & 1 == 1
+    let bits = unsafe { *slice.get_unchecked(j) };
+    (bits >> (i.as_() % T::BITSET_WORD_BITS)) & T::BitsetWord::ONE
+      == T::BitsetWord::ONE
   }
 
   /// Returns true if a specific member is in the set.
@@ -79,24 +81,23 @@ impl<T: Enumoid> EnumSet<T> {
   /// Returns the number of members in the set.
   pub fn count(&self) -> usize {
     let slice = T::slice_bitset(&self.data);
-    slice
-      .iter()
-      .fold(0, |acc, &val| acc + val.count_ones() as usize)
+    slice.iter().fold(0, |acc, &val| acc + val.count_ones())
   }
 
   /// Returns true if there are any members in the set.
   pub fn any(&self) -> bool {
     let slice = T::slice_bitset(&self.data);
-    slice.iter().any(|&val| val != 0)
+    slice.iter().any(|&val| val != T::BitsetWord::ZERO)
   }
 
   /// Returns true if all possible members are in the set.
   pub fn all(&self) -> bool {
     let slice = T::slice_bitset(&self.data);
-    let last = !0 >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
+    let last = T::BitsetWord::ONES
+      >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
     slice[..T::SIZE / T::BITSET_WORD_BITS]
       .iter()
-      .all(|&val| val == !0)
+      .all(|&val| val == T::BitsetWord::ONES)
       && (T::SIZE % T::BITSET_WORD_BITS == 0
         || slice[T::SIZE / T::BITSET_WORD_BITS] == last)
   }

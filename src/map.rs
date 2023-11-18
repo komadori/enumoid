@@ -2,7 +2,7 @@ use crate::base::EnumArrayHelper;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
-use crate::raw::RawIndex;
+use crate::sub_base::RawSizeWord;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;

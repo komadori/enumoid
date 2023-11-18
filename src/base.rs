@@ -1,4 +1,5 @@
-use crate::raw::RawIndex;
+use crate::sub_base::RawBitsetWord;
+use crate::sub_base::RawSizeWord;
 use std::fmt::Debug;
 use std::iter::Iterator;
 use std::iter::Map;
@@ -166,7 +167,7 @@ impl<T: Enumoid> EnumSize<T> {
 ///
 /// Some members are hidden. Impls should only be defined via the `Enumoid` derive macro.
 pub trait Enumoid: Sized {
-  type Word: RawIndex;
+  type Word: RawSizeWord;
   const SIZE: usize;
   const FIRST: Self;
   const LAST: Self;
@@ -174,6 +175,8 @@ pub trait Enumoid: Sized {
 
   #[doc(hidden)]
   type WordRange: Iterator<Item = Self::Word>;
+  #[doc(hidden)]
+  type BitsetWord: RawBitsetWord;
   #[doc(hidden)]
   type BitsetArray: Sized;
   #[doc(hidden)]
@@ -192,9 +195,9 @@ pub trait Enumoid: Sized {
   #[doc(hidden)]
   fn word_range(base: Self::Word, sz: Self::Word) -> Self::WordRange;
   #[doc(hidden)]
-  fn slice_bitset(arr: &Self::BitsetArray) -> &[u8];
+  fn slice_bitset(arr: &Self::BitsetArray) -> &[Self::BitsetWord];
   #[doc(hidden)]
-  fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [u8];
+  fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [Self::BitsetWord];
 
   #[inline]
   fn from_word(value: Self::Word) -> Option<Self> {

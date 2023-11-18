@@ -1,5 +1,5 @@
 use crate::base::Enumoid;
-use crate::raw::RawIndex;
+use crate::sub_base::RawSizeWord;
 use std::marker;
 use std::slice;
 
