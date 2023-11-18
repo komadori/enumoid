@@ -7,15 +7,15 @@ use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
 #[derive(Copy, Clone)]
-pub struct EnumFlags<T: Enumoid> {
-  data: T::FlagsArray,
+pub struct EnumSet<T: Enumoid> {
+  data: T::BitsetArray,
 }
 
-impl<T: Enumoid> EnumFlags<T> {
+impl<T: Enumoid> EnumSet<T> {
   /// Creates a new empty set.
   pub fn new() -> Self {
-    EnumFlags {
-      data: T::DEFAULT_FLAGS,
+    EnumSet {
+      data: T::DEFAULT_BITSET,
     }
   }
 
@@ -29,10 +29,10 @@ impl<T: Enumoid> EnumFlags<T> {
         T::SIZE
       );
     }
-    let j = i.as_() / T::FLAGS_BITS;
-    let mask = 1 << (i.as_() % T::FLAGS_BITS);
+    let j = i.as_() / T::BITSET_WORD_BITS;
+    let mask = 1 << (i.as_() % T::BITSET_WORD_BITS);
     let set = if x { mask } else { 0 };
-    let slice = T::slice_flags_mut(&mut self.data);
+    let slice = T::slice_bitset_mut(&mut self.data);
     let bits = unsafe { slice.get_unchecked_mut(j) };
     *bits = *bits & !mask | set;
   }
@@ -44,7 +44,7 @@ impl<T: Enumoid> EnumFlags<T> {
 
   /// Clears all the members from the set.
   pub fn clear(&mut self) {
-    self.data = T::DEFAULT_FLAGS;
+    self.data = T::DEFAULT_BITSET;
   }
 
   #[inline]
@@ -57,10 +57,10 @@ impl<T: Enumoid> EnumFlags<T> {
         T::SIZE
       );
     }
-    let j = i.as_() / T::FLAGS_BITS;
-    let slice = T::slice_flags(&self.data);
+    let j = i.as_() / T::BITSET_WORD_BITS;
+    let slice = T::slice_bitset(&self.data);
     let bits = unsafe { slice.get_unchecked(j) };
-    (bits >> (i.as_() % T::FLAGS_BITS)) & 1 == 1
+    (bits >> (i.as_() % T::BITSET_WORD_BITS)) & 1 == 1
   }
 
   /// Returns true if a specific member is in the set.
@@ -69,8 +69,8 @@ impl<T: Enumoid> EnumFlags<T> {
   }
 
   /// Returns an iterator over the members of the set.
-  pub fn iter(&self) -> EnumFlagsIter<T> {
-    EnumFlagsIter {
+  pub fn iter(&self) -> EnumSetIter<T> {
+    EnumSetIter {
       flags: self,
       iter: T::word_range(T::Word::ZERO, T::SIZE_WORD),
     }
@@ -78,7 +78,7 @@ impl<T: Enumoid> EnumFlags<T> {
 
   /// Returns the number of members in the set.
   pub fn count(&self) -> usize {
-    let slice = T::slice_flags(&self.data);
+    let slice = T::slice_bitset(&self.data);
     slice
       .iter()
       .fold(0, |acc, &val| acc + val.count_ones() as usize)
@@ -86,52 +86,52 @@ impl<T: Enumoid> EnumFlags<T> {
 
   /// Returns true if there are any members in the set.
   pub fn any(&self) -> bool {
-    let slice = T::slice_flags(&self.data);
+    let slice = T::slice_bitset(&self.data);
     slice.iter().any(|&val| val != 0)
   }
 
   /// Returns true if all possible members are in the set.
   pub fn all(&self) -> bool {
-    let slice = T::slice_flags(&self.data);
-    let last = !0 >> (T::FLAGS_BITS - T::SIZE % T::FLAGS_BITS);
-    slice[..T::SIZE / T::FLAGS_BITS]
+    let slice = T::slice_bitset(&self.data);
+    let last = !0 >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
+    slice[..T::SIZE / T::BITSET_WORD_BITS]
       .iter()
       .all(|&val| val == !0)
-      && (T::SIZE % T::FLAGS_BITS == 0
-        || slice[T::SIZE / T::FLAGS_BITS] == last)
+      && (T::SIZE % T::BITSET_WORD_BITS == 0
+        || slice[T::SIZE / T::BITSET_WORD_BITS] == last)
   }
 }
 
-impl<T: Enumoid + Debug> Debug for EnumFlags<T> {
+impl<T: Enumoid + Debug> Debug for EnumSet<T> {
   fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
     fmt.debug_map().entries(self.iter()).finish()
   }
 }
 
-impl<T: Enumoid> Default for EnumFlags<T> {
+impl<T: Enumoid> Default for EnumSet<T> {
   fn default() -> Self {
-    EnumFlags::<T>::new()
+    EnumSet::<T>::new()
   }
 }
 
-impl<T: Enumoid> PartialEq for EnumFlags<T> {
+impl<T: Enumoid> PartialEq for EnumSet<T> {
   fn eq(&self, other: &Self) -> bool {
-    T::slice_flags(&self.data) == T::slice_flags(&other.data)
+    T::slice_bitset(&self.data) == T::slice_bitset(&other.data)
   }
 }
 
-impl<T: Enumoid> Eq for EnumFlags<T> {}
+impl<T: Enumoid> Eq for EnumSet<T> {}
 
-impl<T: Enumoid> Hash for EnumFlags<T> {
+impl<T: Enumoid> Hash for EnumSet<T> {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-    T::slice_flags(&self.data).hash(state);
+    T::slice_bitset(&self.data).hash(state);
   }
 }
 
 const TRUE: &bool = &true;
 const FALSE: &bool = &false;
 
-impl<T: Enumoid> Index<T> for EnumFlags<T> {
+impl<T: Enumoid> Index<T> for EnumSet<T> {
   type Output = bool;
 
   #[inline]
@@ -144,12 +144,12 @@ impl<T: Enumoid> Index<T> for EnumFlags<T> {
   }
 }
 
-pub struct EnumFlagsIter<'a, T: Enumoid> {
-  flags: &'a EnumFlags<T>,
+pub struct EnumSetIter<'a, T: Enumoid> {
+  flags: &'a EnumSet<T>,
   iter: T::WordRange,
 }
 
-impl<'a, T: Enumoid> Iterator for EnumFlagsIter<'a, T> {
+impl<'a, T: Enumoid> Iterator for EnumSetIter<'a, T> {
   type Item = (T, bool);
 
   #[inline]
@@ -165,4 +165,4 @@ impl<'a, T: Enumoid> Iterator for EnumFlagsIter<'a, T> {
   }
 }
 
-impl<'a, T: Enumoid> ExactSizeIterator for EnumFlagsIter<'a, T> {}
+impl<'a, T: Enumoid> ExactSizeIterator for EnumSetIter<'a, T> {}

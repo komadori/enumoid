@@ -1,9 +1,9 @@
 use crate::test::types::Three;
-use enumoid::EnumFlags;
+use enumoid::EnumSet;
 
 #[test]
 fn test_flags() {
-  let mut flags = EnumFlags::<Three>::new();
+  let mut flags = EnumSet::<Three>::new();
   assert_eq!(flags.any(), false);
   assert_eq!(flags.count(), 0);
   assert_eq!(flags.get(Three::B), false);

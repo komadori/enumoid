@@ -3,9 +3,9 @@ use crate::test::types::{
   Three, ThreeHundred, WideThree,
 };
 use enumoid::EnumArrayHelper;
-use enumoid::EnumFlags;
 use enumoid::EnumMap;
 use enumoid::EnumOptionMap;
+use enumoid::EnumSet;
 use enumoid::EnumVec;
 use enumoid::Size;
 
@@ -17,16 +17,16 @@ fn test_type<T: EnumArrayHelper<u8>>(
   variants: usize,
   value_bytes: usize,
   word_bytes: usize,
-  flags_bytes: usize,
+  set_bytes: usize,
 ) {
   assert_eq!(T::SIZE, variants);
   assert_eq!(std::mem::size_of::<T>(), value_bytes);
   assert_eq!(std::mem::size_of::<Size<T>>(), word_bytes);
-  assert_eq!(std::mem::size_of::<EnumFlags<T>>(), flags_bytes);
+  assert_eq!(std::mem::size_of::<EnumSet<T>>(), set_bytes);
   assert_eq!(std::mem::size_of::<EnumMap<T, u8>>(), variants);
   assert_eq!(
     std::mem::size_of::<EnumOptionMap<T, u8>>(),
-    flags_bytes + variants
+    set_bytes + variants
   );
   assert_eq!(
     std::mem::size_of::<EnumVec<T, u8>>(),

@@ -1,9 +1,9 @@
 use crate::base::EnumArrayHelper;
 use crate::base::Enumoid;
-use crate::flags::EnumFlags;
 use crate::map::EnumMap;
 use crate::opt_map::EnumOptionMap;
 use crate::raw::RawIndex;
+use crate::set::EnumSet;
 use crate::vec::EnumVec;
 use serde::{de, ser};
 use std::convert::TryFrom;
@@ -109,22 +109,22 @@ impl<
   }
 }
 
-struct FlagsSerdeVisitor<T: Enumoid, R> {
-  marker: marker::PhantomData<fn(EnumFlags<T>) -> R>,
+struct SetSerdeVisitor<T: Enumoid, R> {
+  marker: marker::PhantomData<fn(EnumSet<T>) -> R>,
 }
 
-impl<T: Enumoid, R> FlagsSerdeVisitor<T, R> {
+impl<T: Enumoid, R> SetSerdeVisitor<T, R> {
   fn new() -> Self {
-    FlagsSerdeVisitor {
+    SetSerdeVisitor {
       marker: marker::PhantomData,
     }
   }
 }
 
-impl<'de, K, R> de::Visitor<'de> for FlagsSerdeVisitor<K, R>
+impl<'de, K, R> de::Visitor<'de> for SetSerdeVisitor<K, R>
 where
   K: Enumoid + de::Deserialize<'de>,
-  R: TryFrom<EnumFlags<K>>,
+  R: TryFrom<EnumSet<K>>,
 {
   type Value = R;
 
@@ -136,7 +136,7 @@ where
   where
     M: de::MapAccess<'de>,
   {
-    let mut map = EnumFlags::new();
+    let mut map = EnumSet::new();
     while let Some((key, value)) = access.next_entry::<K, bool>()? {
       map.set(key, value);
     }
@@ -147,7 +147,7 @@ where
   }
 }
 
-impl<T: Enumoid + ser::Serialize> ser::Serialize for EnumFlags<T> {
+impl<T: Enumoid + ser::Serialize> ser::Serialize for EnumSet<T> {
   fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
   where
     S: ser::Serializer,
@@ -162,12 +162,12 @@ impl<T: Enumoid + ser::Serialize> ser::Serialize for EnumFlags<T> {
 }
 
 impl<'de, T: Enumoid + de::Deserialize<'de>> de::Deserialize<'de>
-  for EnumFlags<T>
+  for EnumSet<T>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>
   where
     D: de::Deserializer<'de>,
   {
-    de.deserialize_map(FlagsSerdeVisitor::<T, EnumFlags<T>>::new())
+    de.deserialize_map(SetSerdeVisitor::<T, EnumSet<T>>::new())
   }
 }

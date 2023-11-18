@@ -1,13 +1,13 @@
 use crate::base::EnumArrayHelper;
 use crate::base::Size;
-use crate::flags::EnumFlags;
 use crate::raw::RawIndex;
+use crate::set::EnumSet;
 use std::hash::Hash;
 use std::mem;
 
 /// A partial map from enumoid `T` to values `V`.
 pub struct EnumOptionMap<T: EnumArrayHelper<V>, V> {
-  valid: EnumFlags<T>,
+  valid: EnumSet<T>,
   pub(crate) data: T::PartialArray,
 }
 
@@ -15,7 +15,7 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   /// Creates a new empty map.
   pub fn new() -> Self {
     EnumOptionMap {
-      valid: EnumFlags::<T>::new(),
+      valid: EnumSet::<T>::new(),
       data: T::new_partial(),
     }
   }

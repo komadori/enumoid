@@ -137,7 +137,7 @@ fn try_derive_enumoid(
     impl enumoid::Enumoid for #name {
       type Word = #word_type;
       type WordRange = std::ops::Range<Self::Word>;
-      type FlagsArray = [u8; Self::FLAGS_WORDS];
+      type BitsetArray = [u8; Self::BITSET_WORDS];
       const SIZE: usize = #size;
       const SIZE_WORD: Self::Word = if Self::SIZE <= #word_type::MAX as usize {
         Self::SIZE as Self::Word
@@ -148,8 +148,8 @@ fn try_derive_enumoid(
       };
       const FIRST: Self = #first;
       const LAST: Self = #last;
-      const FLAGS_BITS: usize = 8;
-      const DEFAULT_FLAGS: Self::FlagsArray = [0; Self::FLAGS_WORDS];
+      const BITSET_WORD_BITS: usize = 8;
+      const DEFAULT_BITSET: Self::BitsetArray = [0; Self::BITSET_WORDS];
       #[inline]
       fn into_word(self) -> Self::Word {
         #(
@@ -184,9 +184,9 @@ fn try_derive_enumoid(
         base..lim
       }
       #[inline(always)]
-      fn slice_flags(arr: &Self::FlagsArray) -> &[u8] { arr }
+      fn slice_bitset(arr: &Self::BitsetArray) -> &[u8] { arr }
       #[inline(always)]
-      fn slice_flags_mut(arr: &mut Self::FlagsArray) -> &mut [u8] { arr }
+      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [u8] { arr }
     }
     impl<V> enumoid::EnumArrayHelper<V> for #name {
       type PartialArray = [std::mem::MaybeUninit<V>; Self::SIZE];
