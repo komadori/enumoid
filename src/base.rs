@@ -19,15 +19,15 @@ pub type EnumoidIter<T> =
 
 /// A counter between 0 and the number of values inhabiting `T`
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Size<T: Enumoid>(T::Word);
+pub struct EnumSize<T: Enumoid>(T::Word);
 
-impl<T: Enumoid> Size<T> {
-  pub const EMPTY: Size<T> = Size(T::Word::ZERO);
-  pub const FULL: Size<T> = Size(T::SIZE_WORD);
+impl<T: Enumoid> EnumSize<T> {
+  pub const EMPTY: EnumSize<T> = EnumSize(T::Word::ZERO);
+  pub const FULL: EnumSize<T> = EnumSize(T::SIZE_WORD);
 
   #[inline]
   pub fn from_last_key(value: T) -> Self {
-    Size(value.into_word().inc())
+    EnumSize(value.into_word().inc())
   }
 
   #[inline]
@@ -38,12 +38,12 @@ impl<T: Enumoid> Size<T> {
       value,
       T::SIZE_WORD
     );
-    Size(value)
+    EnumSize(value)
   }
 
   pub fn from_usize(sz: usize) -> Option<Self> {
     if sz <= T::SIZE {
-      Some(Size(T::Word::from_usize_unchecked(sz)))
+      Some(EnumSize(T::Word::from_usize_unchecked(sz)))
     } else {
       None
     }
@@ -139,7 +139,7 @@ impl<T: Enumoid> Size<T> {
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
     if w.inc() < self.0 {
-      unsafe { Size::from_word_unchecked(w) }.iter()
+      unsafe { EnumSize::from_word_unchecked(w) }.iter()
     } else {
       self.iter()
     }
@@ -155,7 +155,7 @@ impl<T: Enumoid> Size<T> {
   pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
     let w = until.into_word();
     if w.inc() < self.0 {
-      unsafe { Size::from_word_unchecked(w) }.iter_from(from)
+      unsafe { EnumSize::from_word_unchecked(w) }.iter_from(from)
     } else {
       self.iter_from(from)
     }
@@ -207,42 +207,42 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn next(self) -> Option<Self> {
-    Size::FULL.next(self)
+    EnumSize::FULL.next(self)
   }
 
   #[inline]
   fn prev(self) -> Option<Self> {
-    Size::FULL.prev(self)
+    EnumSize::FULL.prev(self)
   }
 
   #[inline]
   fn next_wrapped(self) -> Self {
-    Size::FULL.next_wrapped(self)
+    EnumSize::FULL.next_wrapped(self)
   }
 
   #[inline]
   fn prev_wrapped(self) -> Self {
-    Size::FULL.prev_wrapped(self)
+    EnumSize::FULL.prev_wrapped(self)
   }
 
   #[inline]
   fn iter() -> EnumoidIter<Self> {
-    Size::FULL.iter()
+    EnumSize::FULL.iter()
   }
 
   #[inline]
   fn iter_until(until: Self) -> EnumoidIter<Self> {
-    Size::from_last_key(until).iter()
+    EnumSize::from_last_key(until).iter()
   }
 
   #[inline]
   fn iter_from(from: Self) -> EnumoidIter<Self> {
-    Size::FULL.iter_from(from)
+    EnumSize::FULL.iter_from(from)
   }
 
   #[inline]
   fn iter_from_until(from: Self, until: Self) -> EnumoidIter<Self> {
-    Size::from_last_key(until).iter_from(from)
+    EnumSize::from_last_key(until).iter_from(from)
   }
 }
 

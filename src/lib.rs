@@ -12,8 +12,8 @@ mod set;
 mod vec;
 
 pub use base::EnumArrayHelper;
+pub use base::EnumSize;
 pub use base::Enumoid;
-pub use base::Size;
 pub use map::EnumMap;
 pub use opt_map::EnumOptionMap;
 pub use set::EnumSet;

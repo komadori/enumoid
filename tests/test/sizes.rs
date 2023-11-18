@@ -6,8 +6,8 @@ use enumoid::EnumArrayHelper;
 use enumoid::EnumMap;
 use enumoid::EnumOptionMap;
 use enumoid::EnumSet;
+use enumoid::EnumSize;
 use enumoid::EnumVec;
-use enumoid::Size;
 
 fn align_word(x: usize, align: usize) -> usize {
   ((x + align - 1) / align) * align
@@ -21,7 +21,7 @@ fn test_type<T: EnumArrayHelper<u8>>(
 ) {
   assert_eq!(T::SIZE, variants);
   assert_eq!(std::mem::size_of::<T>(), value_bytes);
-  assert_eq!(std::mem::size_of::<Size<T>>(), word_bytes);
+  assert_eq!(std::mem::size_of::<EnumSize<T>>(), word_bytes);
   assert_eq!(std::mem::size_of::<EnumSet<T>>(), set_bytes);
   assert_eq!(std::mem::size_of::<EnumMap<T, u8>>(), variants);
   assert_eq!(

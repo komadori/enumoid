@@ -1,21 +1,21 @@
 use crate::test::types::Three;
+use enumoid::EnumSize;
 use enumoid::EnumVec;
-use enumoid::Size;
 
 use super::types::Sixteen;
 
 #[test]
 fn test_vec() {
   let mut vec = EnumVec::<Three, u16>::new();
-  assert_eq!(vec.size(), Size::EMPTY);
+  assert_eq!(vec.size(), EnumSize::EMPTY);
   assert_eq!(vec.pop(), None);
   vec.push(100);
   vec.push(200);
   assert_eq!(vec[Three::A], 100);
   assert_eq!(vec[Three::B], 200);
-  assert_eq!(vec.size(), Size::from_last_key(Three::B));
+  assert_eq!(vec.size(), EnumSize::from_last_key(Three::B));
   vec.push(300);
-  assert_eq!(vec.size(), Size::from_last_key(Three::C));
+  assert_eq!(vec.size(), EnumSize::from_last_key(Three::C));
   assert_eq!(vec.pop(), Some(300));
   assert_eq!(vec.get(Three::C), None);
   vec[Three::B] += 1;

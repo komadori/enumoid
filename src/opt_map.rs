@@ -1,5 +1,5 @@
 use crate::base::EnumArrayHelper;
-use crate::base::Size;
+use crate::base::EnumSize;
 use crate::raw::RawIndex;
 use crate::set::EnumSet;
 use std::hash::Hash;
@@ -89,7 +89,7 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   ///
   /// A map is representable by vector if all the populated values
   /// are contiguous with the first key, or if the map is empty.
-  pub fn is_vec(&self) -> Option<Size<T>> {
+  pub fn is_vec(&self) -> Option<EnumSize<T>> {
     let mut seen_none = false;
     let mut size = T::Word::ZERO;
     for (k, v) in self.valid.iter() {
@@ -102,7 +102,7 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
         seen_none = true;
       }
     }
-    Some(unsafe { Size::<T>::from_word_unchecked(size) })
+    Some(unsafe { EnumSize::<T>::from_word_unchecked(size) })
   }
 
   /// Returns true if the map contains the key.
