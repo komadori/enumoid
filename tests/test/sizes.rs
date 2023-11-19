@@ -6,6 +6,7 @@ use enumoid::EnumArrayHelper;
 use enumoid::EnumMap;
 use enumoid::EnumOptionMap;
 use enumoid::EnumSet;
+use enumoid::EnumSetHelper;
 use enumoid::EnumSize;
 use enumoid::EnumVec;
 
@@ -13,7 +14,7 @@ fn align_word(x: usize, align: usize) -> usize {
   ((x + align - 1) / align) * align
 }
 
-fn test_type<T: EnumArrayHelper<u8>>(
+fn test_type<T: EnumArrayHelper<u8> + EnumSetHelper<u8>>(
   variants: usize,
   value_bytes: usize,
   word_bytes: usize,

@@ -137,8 +137,6 @@ fn try_derive_enumoid(
     impl enumoid::Enumoid for #name {
       type Word = #word_type;
       type WordRange = std::ops::Range<Self::Word>;
-      type BitsetWord = u8;
-      type BitsetArray = [u8; Self::BITSET_WORDS];
       const SIZE: usize = #size;
       const SIZE_WORD: Self::Word = if Self::SIZE <= #word_type::MAX as usize {
         Self::SIZE as Self::Word
@@ -149,8 +147,6 @@ fn try_derive_enumoid(
       };
       const FIRST: Self = #first;
       const LAST: Self = #last;
-      const BITSET_WORD_BITS: usize = 8;
-      const DEFAULT_BITSET: Self::BitsetArray = [0; Self::BITSET_WORDS];
       #[inline]
       fn into_word(self) -> Self::Word {
         #(
@@ -184,10 +180,6 @@ fn try_derive_enumoid(
       fn word_range(base: Self::Word, lim: Self::Word) -> Self::WordRange {
         base..lim
       }
-      #[inline(always)]
-      fn slice_bitset(arr: &Self::BitsetArray) -> &[u8] { arr }
-      #[inline(always)]
-      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [u8] { arr }
     }
     impl<V> enumoid::EnumArrayHelper<V> for #name {
       type PartialArray = [std::mem::MaybeUninit<V>; Self::SIZE];
@@ -216,6 +208,26 @@ fn try_derive_enumoid(
         std::mem::forget(t);
         p
       }
+    }
+    impl enumoid::EnumSetHelper<u8> for #name {
+      type BitsetWord = u8;
+      type BitsetArray = [u8; <Self as enumoid::EnumSetHelper<u8>>::BITSET_WORDS];
+      const BITSET_WORD_BITS: usize = 8;
+      const DEFAULT_BITSET: Self::BitsetArray = [0; <Self as enumoid::EnumSetHelper<u8>>::BITSET_WORDS];
+      #[inline(always)]
+      fn slice_bitset(arr: &Self::BitsetArray) -> &[u8] { arr }
+      #[inline(always)]
+      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [u8] { arr }
+    }
+    impl enumoid::EnumSetHelper<usize> for #name {
+      type BitsetWord = usize;
+      type BitsetArray = [usize; <Self as enumoid::EnumSetHelper<usize>>::BITSET_WORDS];
+      const BITSET_WORD_BITS: usize = usize::BITS as usize;
+      const DEFAULT_BITSET: Self::BitsetArray = [0; <Self as enumoid::EnumSetHelper<usize>>::BITSET_WORDS];
+      #[inline(always)]
+      fn slice_bitset(arr: &Self::BitsetArray) -> &[usize] { arr }
+      #[inline(always)]
+      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [usize] { arr }
     }
   })
 }

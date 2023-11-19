@@ -1,4 +1,4 @@
-use crate::sub_base::RawBitsetWord;
+use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
 use std::fmt::Debug;
 use std::iter::Iterator;
@@ -176,28 +176,13 @@ pub trait Enumoid: Sized {
   #[doc(hidden)]
   type WordRange: Iterator<Item = Self::Word>;
   #[doc(hidden)]
-  type BitsetWord: RawBitsetWord;
-  #[doc(hidden)]
-  type BitsetArray: Sized;
-  #[doc(hidden)]
   const SIZE_WORD: Self::Word;
-  #[doc(hidden)]
-  const BITSET_WORD_BITS: usize;
-  #[doc(hidden)]
-  const BITSET_WORDS: usize =
-    (Self::SIZE + Self::BITSET_WORD_BITS - 1) / Self::BITSET_WORD_BITS;
-  #[doc(hidden)]
-  const DEFAULT_BITSET: Self::BitsetArray;
   /// # Safety
   /// The input word must be less than SIZE.
   #[doc(hidden)]
   unsafe fn from_word_unchecked(value: Self::Word) -> Self;
   #[doc(hidden)]
   fn word_range(base: Self::Word, sz: Self::Word) -> Self::WordRange;
-  #[doc(hidden)]
-  fn slice_bitset(arr: &Self::BitsetArray) -> &[Self::BitsetWord];
-  #[doc(hidden)]
-  fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [Self::BitsetWord];
 
   #[inline]
   fn from_word(value: Self::Word) -> Option<Self> {
@@ -282,4 +267,25 @@ pub trait EnumArrayHelper<V: Sized>: Enumoid {
   fn new_partial() -> Self::PartialArray {
     unsafe { mem::MaybeUninit::uninit().assume_init() }
   }
+}
+
+/// Workaround for const generics not supporting associated consts yet.
+///
+/// All the members are hidden. Impls should only be defined via the `Enumoid` derive macro.
+pub trait EnumSetHelper<BitsetWord: BitsetWordTrait>: Enumoid {
+  #[doc(hidden)]
+  type BitsetWord: BitsetWordTrait;
+  #[doc(hidden)]
+  type BitsetArray: Sized;
+  #[doc(hidden)]
+  const BITSET_WORD_BITS: usize;
+  #[doc(hidden)]
+  const BITSET_WORDS: usize =
+    (Self::SIZE + Self::BITSET_WORD_BITS - 1) / Self::BITSET_WORD_BITS;
+  #[doc(hidden)]
+  const DEFAULT_BITSET: Self::BitsetArray;
+  #[doc(hidden)]
+  fn slice_bitset(arr: &Self::BitsetArray) -> &[Self::BitsetWord];
+  #[doc(hidden)]
+  fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [Self::BitsetWord];
 }

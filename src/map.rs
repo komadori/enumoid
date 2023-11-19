@@ -1,4 +1,5 @@
 use crate::base::EnumArrayHelper;
+use crate::base::EnumSetHelper;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
@@ -161,7 +162,9 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator
   }
 }
 
-impl<T: EnumArrayHelper<V>, V> TryFrom<EnumOptionMap<T, V>> for EnumMap<T, V> {
+impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V> TryFrom<EnumOptionMap<T, V>>
+  for EnumMap<T, V>
+{
   type Error = ();
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     if from.is_full() {

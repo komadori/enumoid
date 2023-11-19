@@ -1,18 +1,26 @@
-use crate::sub_base::RawBitsetWord;
+use crate::base::EnumSetHelper;
+use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
-use crate::Enumoid;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
+///
+/// The optional type parameter `BitsetWord` specifies the size of the words used to store the
+/// bitset. Traits are defined for both `u8` and `usize`.
 #[derive(Copy, Clone)]
-pub struct EnumSet<T: Enumoid> {
+pub struct EnumSet<
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait = u8,
+> {
   data: T::BitsetArray,
 }
 
-impl<T: Enumoid> EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  EnumSet<T, BitsetWord>
+{
   /// Creates a new empty set.
   pub fn new() -> Self {
     EnumSet {
@@ -71,7 +79,7 @@ impl<T: Enumoid> EnumSet<T> {
   }
 
   /// Returns an iterator over the members of the set.
-  pub fn iter(&self) -> EnumSetIter<T> {
+  pub fn iter(&self) -> EnumSetIter<T, BitsetWord> {
     EnumSetIter {
       flags: self,
       iter: T::word_range(T::Word::ZERO, T::SIZE_WORD),
@@ -93,37 +101,48 @@ impl<T: Enumoid> EnumSet<T> {
   /// Returns true if all possible members are in the set.
   pub fn all(&self) -> bool {
     let slice = T::slice_bitset(&self.data);
-    let last = T::BitsetWord::ONES
+    let last = T::BitsetWord::ALL_SET
       >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
     slice[..T::SIZE / T::BITSET_WORD_BITS]
       .iter()
-      .all(|&val| val == T::BitsetWord::ONES)
+      .all(|&val| val == T::BitsetWord::ALL_SET)
       && (T::SIZE % T::BITSET_WORD_BITS == 0
         || slice[T::SIZE / T::BITSET_WORD_BITS] == last)
   }
 }
 
-impl<T: Enumoid + Debug> Debug for EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord> + Debug, BitsetWord: BitsetWordTrait> Debug
+  for EnumSet<T, BitsetWord>
+{
   fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
     fmt.debug_map().entries(self.iter()).finish()
   }
 }
 
-impl<T: Enumoid> Default for EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Default
+  for EnumSet<T, BitsetWord>
+{
   fn default() -> Self {
-    EnumSet::<T>::new()
+    EnumSet::<T, BitsetWord>::new()
   }
 }
 
-impl<T: Enumoid> PartialEq for EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> PartialEq
+  for EnumSet<T, BitsetWord>
+{
   fn eq(&self, other: &Self) -> bool {
     T::slice_bitset(&self.data) == T::slice_bitset(&other.data)
   }
 }
 
-impl<T: Enumoid> Eq for EnumSet<T> {}
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Eq
+  for EnumSet<T, BitsetWord>
+{
+}
 
-impl<T: Enumoid> Hash for EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Hash
+  for EnumSet<T, BitsetWord>
+{
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     T::slice_bitset(&self.data).hash(state);
   }
@@ -132,7 +151,9 @@ impl<T: Enumoid> Hash for EnumSet<T> {
 const TRUE: &bool = &true;
 const FALSE: &bool = &false;
 
-impl<T: Enumoid> Index<T> for EnumSet<T> {
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Index<T>
+  for EnumSet<T, BitsetWord>
+{
   type Output = bool;
 
   #[inline]
@@ -145,12 +166,18 @@ impl<T: Enumoid> Index<T> for EnumSet<T> {
   }
 }
 
-pub struct EnumSetIter<'a, T: Enumoid> {
-  flags: &'a EnumSet<T>,
+pub struct EnumSetIter<
+  'a,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> {
+  flags: &'a EnumSet<T, BitsetWord>,
   iter: T::WordRange,
 }
 
-impl<'a, T: Enumoid> Iterator for EnumSetIter<'a, T> {
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
+  for EnumSetIter<'a, T, BitsetWord>
+{
   type Item = (T, bool);
 
   #[inline]
@@ -166,4 +193,7 @@ impl<'a, T: Enumoid> Iterator for EnumSetIter<'a, T> {
   }
 }
 
-impl<'a, T: Enumoid> ExactSizeIterator for EnumSetIter<'a, T> {}
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  ExactSizeIterator for EnumSetIter<'a, T, BitsetWord>
+{
+}

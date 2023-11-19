@@ -1,21 +1,35 @@
 use crate::base::EnumArrayHelper;
+use crate::base::EnumSetHelper;
 use crate::base::EnumSize;
 use crate::set::EnumSet;
+use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
 use std::hash::Hash;
 use std::mem;
 
 /// A partial map from enumoid `T` to values `V`.
-pub struct EnumOptionMap<T: EnumArrayHelper<V>, V> {
-  valid: EnumSet<T>,
+///
+/// The optional type parameter `BitsetWord` is passed on to an embedded `EnumSet` which is used
+/// to store the validity bitmap.
+pub struct EnumOptionMap<
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait = u8,
+> {
+  valid: EnumSet<T, BitsetWord>,
   pub(crate) data: T::PartialArray,
 }
 
-impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > EnumOptionMap<T, V, BitsetWord>
+{
   /// Creates a new empty map.
   pub fn new() -> Self {
     EnumOptionMap {
-      valid: EnumSet::<T>::new(),
+      valid: EnumSet::<T, BitsetWord>::new(),
       data: T::new_partial(),
     }
   }
@@ -116,19 +130,34 @@ impl<T: EnumArrayHelper<V>, V> EnumOptionMap<T, V> {
   }
 }
 
-impl<T: EnumArrayHelper<V>, V> Default for EnumOptionMap<T, V> {
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > Default for EnumOptionMap<T, V, BitsetWord>
+{
   fn default() -> Self {
-    EnumOptionMap::<T, V>::new()
+    EnumOptionMap::<T, V, BitsetWord>::new()
   }
 }
 
-impl<T: EnumArrayHelper<V>, V> Drop for EnumOptionMap<T, V> {
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > Drop for EnumOptionMap<T, V, BitsetWord>
+{
   fn drop(&mut self) {
     self.clear()
   }
 }
 
-impl<T: EnumArrayHelper<V>, V: PartialEq> PartialEq for EnumOptionMap<T, V> {
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V: PartialEq,
+    BitsetWord: BitsetWordTrait,
+  > PartialEq for EnumOptionMap<T, V, BitsetWord>
+{
   fn eq(&self, other: &Self) -> bool {
     for key in T::iter() {
       let i = key.into_word();
@@ -140,9 +169,20 @@ impl<T: EnumArrayHelper<V>, V: PartialEq> PartialEq for EnumOptionMap<T, V> {
   }
 }
 
-impl<T: EnumArrayHelper<V>, V: Eq> Eq for EnumOptionMap<T, V> {}
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V: Eq,
+    BitsetWord: BitsetWordTrait,
+  > Eq for EnumOptionMap<T, V, BitsetWord>
+{
+}
 
-impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumOptionMap<T, V> {
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V: Hash,
+    BitsetWord: BitsetWordTrait,
+  > Hash for EnumOptionMap<T, V, BitsetWord>
+{
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     for key in T::iter() {
       self.get(key).hash(state);

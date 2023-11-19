@@ -39,7 +39,7 @@ impl_size_word!(u16);
 impl_size_word!(u32);
 impl_size_word!(usize);
 
-pub trait RawBitsetWord:
+pub trait BitsetWordTrait:
   Copy
   + Debug
   + Eq
@@ -52,16 +52,16 @@ pub trait RawBitsetWord:
 {
   const ZERO: Self;
   const ONE: Self;
-  const ONES: Self;
+  const ALL_SET: Self;
   fn count_ones(self) -> usize;
 }
 
-macro_rules! impl_raw_bitset_word {
+macro_rules! impl_bitset_word_trait {
   ($t: ty) => {
-    impl RawBitsetWord for $t {
+    impl BitsetWordTrait for $t {
       const ZERO: Self = 0;
       const ONE: Self = 1;
-      const ONES: Self = !0;
+      const ALL_SET: Self = !0;
       fn count_ones(self) -> usize {
         self.count_ones() as usize
       }
@@ -69,4 +69,5 @@ macro_rules! impl_raw_bitset_word {
   };
 }
 
-impl_raw_bitset_word!(u8);
+impl_bitset_word_trait!(u8);
+impl_bitset_word_trait!(usize);
