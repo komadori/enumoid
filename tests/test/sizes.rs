@@ -1,6 +1,6 @@
 use crate::test::types::{
   CompoundOnWideSeven, CompoundSeven, CompoundWideOnSeven, Seventeen, Sixteen,
-  Three, ThreeHundred, WideThree,
+  StructOne, StructThree, Three, ThreeHundred, WideThree,
 };
 use enumoid::EnumArrayHelper;
 use enumoid::EnumMap;
@@ -43,6 +43,12 @@ fn test_three() {
 #[test]
 fn test_wide_three() {
   test_type::<WideThree>(3, 1, 4, 1);
+}
+
+#[test]
+fn test_struct() {
+  test_type::<StructOne>(1, 0, 1, 1);
+  test_type::<StructThree>(3, 1, 1, 1);
 }
 
 #[test]

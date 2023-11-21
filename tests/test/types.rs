@@ -16,6 +16,12 @@ pub enum WideThree {
 }
 
 #[derive(Debug, Enumoid, PartialEq)]
+pub struct StructOne;
+
+#[derive(Debug, Enumoid, PartialEq)]
+pub struct StructThree(pub Three);
+
+#[derive(Debug, Enumoid, PartialEq)]
 pub enum CompoundSeven {
   X(Three),
   Y,

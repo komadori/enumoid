@@ -37,6 +37,19 @@ enum Weekend { Saturday, Sunday }
 
 The field may not have a generic type as this would require currently unstable aspects of const generics.
 
+Enumoids can also be derived for unit structs and for tuple structs with a single field whose type implements Enumoid:
+
+```rust
+# use enumoid::Enumoid;
+# #[derive(Enumoid)]
+# enum Day { Placeholder }
+#[derive(Enumoid)]
+struct AnyDay;
+
+#[derive(Enumoid)]
+struct EveryDay(Day);
+```
+
 By default, a u8 is used to represent the number of values inhabiting an Enumoid. If you want to derive Enumoid for a type with more than 255 values, you can specify a wider type with the `index_type` helper attribute.
 
 ```
@@ -46,7 +59,7 @@ By default, a u8 is used to represent the number of values inhabiting an Enumoid
 enum Massive { A, /*...*/ }
 ```
 
-## Traversing Enumoid-space
+## Traversing Enumoids
 
 The Enumoid trait provides a range of utility functions for traversing through value space. They allow you to find the next or previous value, with or without wrapping. For example:
 
@@ -60,6 +73,9 @@ The Enumoid trait provides a range of utility functions for traversing through v
 # enum Weekend { Saturday, Sunday }
 let tomorrow = Day::Work(Weekday::Friday).next();
 assert_eq!(tomorrow, Some(Day::Rest(Weekend::Saturday)));
+
+let yesterday = Day::Work(Weekday::Monday).prev_wrapped();
+assert_eq!(yesterday, Day::Rest(Weekend::Sunday));
 ```
 
 Another useful operation is to iterate through all the values:

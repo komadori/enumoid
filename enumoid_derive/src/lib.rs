@@ -107,6 +107,39 @@ fn generate_enum_rules(
   Ok(rules)
 }
 
+fn generate_struct_rules(
+  data: &syn::DataStruct,
+  name: &syn::Ident,
+) -> Result<Vec<Rule>> {
+  let rule = if let Some(field) = data.fields.iter().next() {
+    if data.fields.len() > 1 {
+      bail!("Enumoid structs may not have more than one field.");
+    }
+    if field.ident.is_some() {
+      bail!("Enumoid structs may not use a named field.")
+    }
+    let sub_ty = field.ty.clone();
+    Rule {
+      size: quote! { <#sub_ty as Enumoid>::SIZE },
+      consts: quote! {},
+      to_expr: quote! { #name(x) => x.into_word() as <#name as Enumoid>::Word, },
+      from_expr: quote! { x => #name(#sub_ty::from_word_unchecked((x) as <#sub_ty as Enumoid>::Word)), },
+      first: quote! { #name(<#sub_ty as Enumoid>::FIRST) },
+      last: quote! { #name(<#sub_ty as Enumoid>::LAST) },
+    }
+  } else {
+    Rule {
+      size: quote! { 1 },
+      consts: quote! {},
+      to_expr: quote! { #name => 0, },
+      from_expr: quote! { 0 => #name, },
+      first: quote! { #name },
+      last: quote! { #name },
+    }
+  };
+  Ok(vec![rule])
+}
+
 fn try_derive_enumoid(
   input: proc_macro::TokenStream,
 ) -> Result<proc_macro2::TokenStream> {
@@ -120,8 +153,12 @@ fn try_derive_enumoid(
     } else {
       generate_enum_rules(&data_enum, &name)
     }
+  } else if let syn::Data::Struct(data_struct) = input.data {
+    generate_struct_rules(&data_struct, &name)
   } else {
-    Err(anyhow!("#[derive(Enumoid)] can only be applied to enums."))
+    Err(anyhow!(
+      "#[derive(Enumoid)] must be applied to an enum or struct."
+    ))
   }?;
   let size = rules
     .iter()
