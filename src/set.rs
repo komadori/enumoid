@@ -1,6 +1,7 @@
 use crate::base::EnumSetHelper;
 use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
+use crate::EnumIndex;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -28,16 +29,10 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
     }
   }
 
+  /// Sets whether a member index is in the set.
   #[inline]
-  pub(crate) fn set_internal(&mut self, i: T::Word, x: bool) {
-    unsafe {
-      hint_assert!(
-        i < T::SIZE_WORD,
-        "Index out of bounds: {:?} >= {:?}",
-        i,
-        T::SIZE
-      );
-    }
+  pub fn set_by_index(&mut self, index: EnumIndex<T>, x: bool) {
+    let i = index.into_word();
     let j = i.as_() / T::BITSET_WORD_BITS;
     let mask = T::BitsetWord::ONE << (i.as_() % T::BITSET_WORD_BITS);
     let set = if x { mask } else { T::BitsetWord::ZERO };
@@ -48,7 +43,7 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Sets whether a member is in the set.
   pub fn set(&mut self, e: T, x: bool) {
-    self.set_internal(T::into_word(e), x)
+    self.set_by_index(e.into(), x)
   }
 
   /// Clears all the members from the set.
@@ -56,16 +51,10 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
     self.data = T::DEFAULT_BITSET;
   }
 
+  /// Returns true if a specific member index is in the set.
   #[inline]
-  pub(crate) fn get_internal(&self, i: T::Word) -> bool {
-    unsafe {
-      hint_assert!(
-        i < T::SIZE_WORD,
-        "Index out of bounds: {:?} >= {:?}",
-        i,
-        T::SIZE
-      );
-    }
+  pub fn get_by_index(&self, index: EnumIndex<T>) -> bool {
+    let i = index.into_word();
     let j = i.as_() / T::BITSET_WORD_BITS;
     let slice = T::slice_bitset(&self.data);
     let bits = unsafe { *slice.get_unchecked(j) };
@@ -75,7 +64,7 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Returns true if a specific member is in the set.
   pub fn get(&self, e: T) -> bool {
-    self.get_internal(T::into_word(e))
+    self.get_by_index(e.into())
   }
 
   /// Returns an iterator over the members of the set.
@@ -183,8 +172,8 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     let word = self.iter.next()?;
-    let key = unsafe { T::from_word_unchecked(word) };
-    Some((key, self.flags.get_internal(word)))
+    let index = unsafe { EnumIndex::<T>::from_word_unchecked(word) };
+    Some((index.into_value(), self.flags.get_by_index(index)))
   }
 
   #[inline]

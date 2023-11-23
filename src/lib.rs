@@ -12,6 +12,7 @@ mod sub_base;
 mod vec;
 
 pub use base::EnumArrayHelper;
+pub use base::EnumIndex;
 pub use base::EnumSetHelper;
 pub use base::EnumSize;
 pub use base::Enumoid;

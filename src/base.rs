@@ -19,8 +19,16 @@ pub type EnumoidIter<T> =
   Map<<T as Enumoid>::WordRange, fn(<T as Enumoid>::Word) -> T>;
 
 /// A counter between 0 and the number of values inhabiting `T`
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct EnumSize<T: Enumoid>(T::Word);
+
+impl<T: Enumoid> Copy for EnumSize<T> {}
+
+impl<T: Enumoid> Clone for EnumSize<T> {
+  fn clone(&self) -> Self {
+    *self
+  }
+}
 
 impl<T: Enumoid> EnumSize<T> {
   pub const EMPTY: EnumSize<T> = EnumSize(T::Word::ZERO);
@@ -160,6 +168,69 @@ impl<T: Enumoid> EnumSize<T> {
     } else {
       self.iter_from(from)
     }
+  }
+}
+
+/// A counter between 0 and the highest index into thet s values inhabiting `T`
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct EnumIndex<T: Enumoid>(T::Word);
+
+impl<T: Enumoid> Copy for EnumIndex<T> {}
+
+impl<T: Enumoid> Clone for EnumIndex<T> {
+  fn clone(&self) -> Self {
+    *self
+  }
+}
+
+impl<T: Enumoid> EnumIndex<T> {
+  #[inline]
+  pub(crate) unsafe fn from_word_unchecked(value: T::Word) -> Self {
+    hint_assert!(
+      value < T::SIZE_WORD,
+      "from_word_unchecked: Index out of bounds: {:?} >= {:?}",
+      value,
+      T::SIZE_WORD
+    );
+    EnumIndex(value)
+  }
+
+  pub fn from_usize(sz: usize) -> Option<Self> {
+    if sz < T::SIZE {
+      Some(EnumIndex(T::Word::from_usize_unchecked(sz)))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  pub fn into_value(self) -> T {
+    unsafe { T::from_word_unchecked(self.0) }
+  }
+
+  #[inline]
+  pub fn into_word(self) -> T::Word {
+    unsafe {
+      hint_assert!(
+        self.0 < T::SIZE_WORD,
+        "Index out of bounds: {:?} >= {:?}",
+        self.0,
+        T::SIZE
+      );
+    };
+    self.0
+  }
+
+  #[inline]
+  pub fn into_usize(self) -> usize {
+    self.into_word().as_()
+  }
+}
+
+impl<T: Enumoid> From<T> for EnumIndex<T> {
+  #[inline]
+  fn from(value: T) -> Self {
+    EnumIndex(value.into_word())
   }
 }
 

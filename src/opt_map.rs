@@ -4,6 +4,7 @@ use crate::base::EnumSize;
 use crate::set::EnumSet;
 use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
+use crate::EnumIndex;
 use std::hash::Hash;
 use std::mem;
 
@@ -34,10 +35,14 @@ impl<
     }
   }
 
+  /// Returns a reference to the value associated with a given index,
+  /// or `None` if the index has no value in the map.
   #[inline]
-  pub(crate) fn get_internal(&self, i: T::Word) -> Option<&V> {
-    if self.valid.get_internal(i) {
-      Some(unsafe { T::partial_slice(&self.data)[i.as_()].assume_init_ref() })
+  pub fn get_by_index(&self, index: EnumIndex<T>) -> Option<&V> {
+    if self.valid.get_by_index(index) {
+      Some(unsafe {
+        T::partial_slice(&self.data)[index.into_usize()].assume_init_ref()
+      })
     } else {
       None
     }
@@ -46,42 +51,52 @@ impl<
   /// Returns a reference to the value associated with a given key,
   /// or `None` if the key has no value in the map.
   pub fn get(&self, key: T) -> Option<&V> {
-    self.get_internal(T::into_word(key))
+    self.get_by_index(key.into())
   }
 
-  /// Returns a mutable reference to the value associated with a given key,
-  /// or `None` if the key has no value in the map.
-  pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
-    let i = T::into_word(key);
-    if self.valid.get_internal(i) {
+  /// Returns a mutable reference to the value associated with a given index,
+  /// or `None` if the index has no value in the map.
+  pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> Option<&mut V> {
+    if self.valid.get_by_index(index) {
       Some(unsafe {
-        T::partial_slice_mut(&mut self.data)[i.as_()].assume_init_mut()
+        T::partial_slice_mut(&mut self.data)[index.into_usize()]
+          .assume_init_mut()
       })
     } else {
       None
     }
   }
 
-  /// Sets the value associated with a given key.
-  pub fn set(&mut self, key: T, value: Option<V>) {
-    let i = T::into_word(key);
-    let cell = &mut T::partial_slice_mut(&mut self.data)[i.as_()];
-    if self.valid.get_internal(i) {
+  /// Returns a mutable reference to the value associated with a given key,
+  /// or `None` if the key has no value in the map.
+  pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
+    self.get_by_index_mut(key.into())
+  }
+
+  /// Sets the value associated with a given index.
+  pub fn set_by_index(&mut self, index: EnumIndex<T>, value: Option<V>) {
+    let cell = &mut T::partial_slice_mut(&mut self.data)[index.into_usize()];
+    if self.valid.get_by_index(index) {
       unsafe { cell.assume_init_drop() };
     }
-    self.valid.set_internal(i, value.is_some());
+    self.valid.set_by_index(index, value.is_some());
     if let Some(v) = value {
       cell.write(v);
     }
+  }
+
+  /// Sets the value associated with a given key.
+  pub fn set(&mut self, key: T, value: Option<V>) {
+    self.set_by_index(key.into(), value)
   }
 
   /// Clears all the elements from the map.
   pub fn clear(&mut self) {
     let data = T::partial_slice_mut(&mut self.data);
     for key in T::iter() {
-      let word = key.into_word();
-      if self.valid.get_internal(word) {
-        let cell = &mut data[word.as_()];
+      let index = key.into();
+      if self.valid.get_by_index(index) {
+        let cell = &mut data[index.into_usize()];
         unsafe { cell.assume_init_drop() };
       }
     }
@@ -160,8 +175,8 @@ impl<
 {
   fn eq(&self, other: &Self) -> bool {
     for key in T::iter() {
-      let i = key.into_word();
-      if self.get_internal(i) != other.get_internal(i) {
+      let index = key.into();
+      if self.get_by_index(index) != other.get_by_index(index) {
         return false;
       }
     }
