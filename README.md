@@ -102,7 +102,20 @@ let mut map = EnumMap::<FooBar, String>::new();
 map[FooBar::Foo] = "Hello".to_string();
 ```
 
-`EnumOptionMap` is similar, but it provides a partial mapping wherein elements may be absent. `EnumVec` is also a partial mapping, but operates like a vector wherein any present elements are contiguous with the first value of the Enumoid. `EnumFlags` is specialised for storing booleans.
+`EnumOptionMap` is similar, but it provides a partial mapping wherein elements may be absent. `EnumVec` is also a partial mapping, but operates like a vector wherein any present elements are contiguous with the first value of the Enumoid.
+
+`EnumSet` is specialised for storing set membership:
+
+```rust
+# use enumoid::Enumoid;
+# use enumoid::EnumSet;
+# #[derive(Enumoid)]
+# enum FooBar { Foo, Bar }
+let mut set = EnumSet::<FooBar>::new();
+set.set(FooBar::Foo, true);
+set.set(FooBar::Bar, true);
+assert_eq!(set.count(), 2);
+```
 
 ## Licence
 
