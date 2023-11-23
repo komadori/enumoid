@@ -203,6 +203,10 @@ impl<T: Enumoid> EnumIndex<T> {
     }
   }
 
+  pub fn from_value(value: T) -> Self {
+    unsafe { Self::from_word_unchecked(value.into_word()) }
+  }
+
   #[inline]
   pub fn into_value(self) -> T {
     unsafe { T::from_word_unchecked(self.0) }

@@ -4,6 +4,7 @@ use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
 use crate::sub_base::RawSizeWord;
+use crate::EnumIndex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -49,9 +50,19 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
     T::total_slice_mut(&mut self.data)
   }
 
+  /// Returns a reference to the value associated with a given index.
+  pub fn get_by_index(&self, index: EnumIndex<T>) -> &V {
+    &self[index]
+  }
+
   /// Returns a reference to the value associated with a given key.
   pub fn get(&self, key: T) -> &V {
     &self[key]
+  }
+
+  /// Returns a mutable reference to the value associated with a given index.
+  pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> &mut V {
+    &mut self[index]
   }
 
   /// Returns a mutable reference to the value associated with a given key.
@@ -124,19 +135,35 @@ impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumMap<T, V> {
   }
 }
 
+impl<T: EnumArrayHelper<V>, V> Index<EnumIndex<T>> for EnumMap<T, V> {
+  type Output = V;
+
+  #[inline]
+  fn index(&self, index: EnumIndex<T>) -> &V {
+    unsafe { self.as_slice().get_unchecked(index.into_usize()) }
+  }
+}
+
 impl<T: EnumArrayHelper<V>, V> Index<T> for EnumMap<T, V> {
   type Output = V;
 
   #[inline]
-  fn index(&self, i: T) -> &V {
-    unsafe { self.as_slice().get_unchecked(T::into_word(i).as_()) }
+  fn index(&self, key: T) -> &V {
+    &self[EnumIndex::from_value(key)]
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> IndexMut<EnumIndex<T>> for EnumMap<T, V> {
+  #[inline]
+  fn index_mut(&mut self, index: EnumIndex<T>) -> &mut V {
+    unsafe { self.as_slice_mut().get_unchecked_mut(index.into_usize()) }
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumMap<T, V> {
   #[inline]
-  fn index_mut(&mut self, i: T) -> &mut V {
-    unsafe { self.as_slice_mut().get_unchecked_mut(T::into_word(i).as_()) }
+  fn index_mut(&mut self, key: T) -> &mut V {
+    &mut self[EnumIndex::from_value(key)]
   }
 }
 

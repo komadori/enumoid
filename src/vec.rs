@@ -5,6 +5,7 @@ use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
 use crate::sub_base::RawSizeWord;
+use crate::EnumIndex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
@@ -72,18 +73,28 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     }
   }
 
+  /// Returns a reference to the value associated with a given index,
+  /// or `None` if the index is beyond the end of the vector.
+  pub fn get_by_index(&self, index: EnumIndex<T>) -> Option<&V> {
+    self.as_slice().get(index.into_usize())
+  }
+
   /// Returns a reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
   pub fn get(&self, key: T) -> Option<&V> {
-    let i = T::into_word(key);
-    self.as_slice().get(i.as_())
+    self.get_by_index(EnumIndex::from_value(key))
+  }
+
+  /// Returns a mutable reference to the value associated with a given index,
+  /// or `None` if the index is beyond the end of the vector.
+  pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> Option<&mut V> {
+    self.as_slice_mut().get_mut(index.into_usize())
   }
 
   /// Returns a mutable reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
-    let i = T::into_word(key);
-    self.as_slice_mut().get_mut(i.as_())
+    self.get_by_index_mut(EnumIndex::from_value(key))
   }
 
   /// Returns true if the vector is empty.
@@ -103,7 +114,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
 
   /// Returns the size of the vector.
   pub fn size(&self) -> EnumSize<T> {
-    unsafe { EnumSize::<T>::from_word_unchecked(self.len) }
+    unsafe { EnumSize::from_word_unchecked(self.len) }
   }
 
   /// Swaps two elements in the vector.
@@ -247,19 +258,35 @@ impl<T: EnumArrayHelper<V>, V: Hash> Hash for EnumVec<T, V> {
   }
 }
 
+impl<T: EnumArrayHelper<V>, V> Index<EnumIndex<T>> for EnumVec<T, V> {
+  type Output = V;
+
+  #[inline]
+  fn index(&self, index: EnumIndex<T>) -> &V {
+    &self.as_slice()[index.into_usize()]
+  }
+}
+
 impl<T: EnumArrayHelper<V>, V> Index<T> for EnumVec<T, V> {
   type Output = V;
 
   #[inline]
-  fn index(&self, i: T) -> &V {
-    &self.as_slice()[T::into_word(i).as_()]
+  fn index(&self, key: T) -> &V {
+    &self[EnumIndex::from_value(key)]
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> IndexMut<EnumIndex<T>> for EnumVec<T, V> {
+  #[inline]
+  fn index_mut(&mut self, index: EnumIndex<T>) -> &mut V {
+    &mut self.as_slice_mut()[index.into_usize()]
   }
 }
 
 impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumVec<T, V> {
   #[inline]
-  fn index_mut(&mut self, i: T) -> &mut V {
-    &mut self.as_slice_mut()[T::into_word(i).as_()]
+  fn index_mut(&mut self, key: T) -> &mut V {
+    &mut self[EnumIndex::from_value(key)]
   }
 }
 
