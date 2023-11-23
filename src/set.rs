@@ -172,7 +172,7 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     let word = self.iter.next()?;
-    let index = unsafe { EnumIndex::<T>::from_word_unchecked(word) };
+    let index = unsafe { EnumIndex::from_word_unchecked(word) };
     Some((index.into_value(), self.flags.get_by_index(index)))
   }
 
