@@ -35,7 +35,7 @@ impl<T: Enumoid> EnumSize<T> {
   pub const FULL: EnumSize<T> = EnumSize(T::SIZE_WORD);
 
   #[inline]
-  pub fn from_last_key(value: T) -> Self {
+  pub fn from_last_value(value: T) -> Self {
     EnumSize(value.into_word().inc())
   }
 
@@ -59,17 +59,17 @@ impl<T: Enumoid> EnumSize<T> {
   }
 
   #[inline]
-  pub fn to_word(&self) -> T::Word {
+  pub fn into_word(&self) -> T::Word {
     self.0
   }
 
   #[inline]
-  pub fn to_usize(&self) -> usize {
+  pub fn into_usize(&self) -> usize {
     self.0.as_()
   }
 
   #[inline]
-  pub fn last_key(&self) -> Option<T> {
+  pub fn into_last_value(&self) -> Option<T> {
     if self.0 > T::Word::ZERO {
       Some(unsafe { T::from_word_unchecked(self.0.dec()) })
     } else {
@@ -291,7 +291,7 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn iter_until(until: Self) -> EnumoidIter<Self> {
-    EnumSize::from_last_key(until).iter()
+    EnumSize::from_last_value(until).iter()
   }
 
   #[inline]
@@ -301,7 +301,7 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn iter_from_until(from: Self, until: Self) -> EnumoidIter<Self> {
-    EnumSize::from_last_key(until).iter_from(from)
+    EnumSize::from_last_value(until).iter_from(from)
   }
 }
 

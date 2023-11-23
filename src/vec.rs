@@ -290,7 +290,7 @@ impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V> TryFrom<EnumOptionMap<T, V>>
   fn try_from(from: EnumOptionMap<T, V>) -> Result<Self, Self::Error> {
     match from.is_vec() {
       Some(size) => Ok(EnumVec {
-        len: size.to_word(),
+        len: size.into_word(),
         data: from.into_partial(),
       }),
       None => Err(()),
