@@ -18,7 +18,7 @@ macro_rules! hint_assert {
 pub type EnumoidIter<T> =
   Map<<T as Enumoid>::WordRange, fn(<T as Enumoid>::Word) -> T>;
 
-/// A counter between 0 and the number of values inhabiting `T`
+/// A counter between 0 and the number of values inhabiting `T`.
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct EnumSize<T: Enumoid>(T::Word);
 
@@ -171,7 +171,7 @@ impl<T: Enumoid> EnumSize<T> {
   }
 }
 
-/// A counter between 0 and the highest index into thet s values inhabiting `T`
+/// A counter between 0 and the highest index into the values inhabiting `T`.
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct EnumIndex<T: Enumoid>(T::Word);
 
