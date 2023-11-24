@@ -112,8 +112,8 @@ map[FooBar::Foo] = "Hello".to_string();
 # #[derive(Enumoid)]
 # enum FooBar { Foo, Bar }
 let mut set = EnumSet::<FooBar>::new();
-set.set(FooBar::Foo, true);
-set.set(FooBar::Bar, true);
+set.insert(FooBar::Foo);
+set.insert(FooBar::Bar);
 assert_eq!(set.count(), 2);
 ```
 

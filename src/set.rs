@@ -31,19 +31,43 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Sets whether a member index is in the set.
   #[inline]
-  pub fn set_by_index(&mut self, index: EnumIndex<T>, x: bool) {
+  pub fn set_by_index(&mut self, index: EnumIndex<T>, flag: bool) {
     let i = index.into_word();
     let j = i.as_() / T::BITSET_WORD_BITS;
     let mask = T::BitsetWord::ONE << (i.as_() % T::BITSET_WORD_BITS);
-    let set = if x { mask } else { T::BitsetWord::ZERO };
+    let set = if flag { mask } else { T::BitsetWord::ZERO };
     let slice = T::slice_bitset_mut(&mut self.data);
     let bits = unsafe { slice.get_unchecked_mut(j) };
     *bits = *bits & !mask | set;
   }
 
   /// Sets whether a member is in the set.
-  pub fn set(&mut self, e: T, x: bool) {
-    self.set_by_index(e.into(), x)
+  pub fn set(&mut self, key: T, flag: bool) {
+    self.set_by_index(key.into(), flag)
+  }
+
+  /// Adds a member index to the set and returns true if it was already present.
+  pub fn insert_by_index(&mut self, index: EnumIndex<T>) -> bool {
+    let has = self.contains_by_index(index);
+    self.set_by_index(index, true);
+    has
+  }
+
+  /// Adds a member to the set and returns true if it was already present.
+  pub fn insert(&mut self, key: T) -> bool {
+    self.insert_by_index(key.into())
+  }
+
+  /// Removes a member index from the set and returns true if it was present.
+  pub fn remove_by_index(&mut self, index: EnumIndex<T>) -> bool {
+    let has = self.contains_by_index(index);
+    self.set_by_index(index, false);
+    has
+  }
+
+  /// Removes a member from the set and returns true if it was present.
+  pub fn remove(&mut self, key: T) -> bool {
+    self.remove_by_index(key.into())
   }
 
   /// Clears all the members from the set.
@@ -53,7 +77,7 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Returns true if a specific member index is in the set.
   #[inline]
-  pub fn get_by_index(&self, index: EnumIndex<T>) -> bool {
+  pub fn contains_by_index(&self, index: EnumIndex<T>) -> bool {
     let i = index.into_word();
     let j = i.as_() / T::BITSET_WORD_BITS;
     let slice = T::slice_bitset(&self.data);
@@ -63,8 +87,8 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
   }
 
   /// Returns true if a specific member is in the set.
-  pub fn get(&self, e: T) -> bool {
-    self.get_by_index(e.into())
+  pub fn contains(&self, key: T) -> bool {
+    self.contains_by_index(key.into())
   }
 
   /// Returns an iterator over the members of the set.
@@ -147,7 +171,7 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Index<T>
 
   #[inline]
   fn index(&self, i: T) -> &bool {
-    if self.get(i) {
+    if self.contains(i) {
       TRUE
     } else {
       FALSE
@@ -173,7 +197,7 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   fn next(&mut self) -> Option<Self::Item> {
     let word = self.iter.next()?;
     let index = unsafe { EnumIndex::from_word_unchecked(word) };
-    Some((index.into_value(), self.flags.get_by_index(index)))
+    Some((index.into_value(), self.flags.contains_by_index(index)))
   }
 
   #[inline]
