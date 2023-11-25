@@ -1,115 +1,131 @@
 use crate::test::types::{
-  CompoundSeven, Seventeen, Sixteen, StructThree, Three,
+  CompoundSeven, Seventeen, Sixteen, StructOne, StructThree, Three,
+  ThreeHundred, WideThree,
 };
-use enumoid::{EnumSize, Enumoid};
+use enumoid::{EnumIndex, Enumoid};
+use std::{fmt::Debug, iter::zip};
 
-#[test]
-fn test_first() {
-  assert_eq!(Three::FIRST, Three::A);
-  assert_eq!(Sixteen::FIRST, Sixteen::A);
-  assert_eq!(Seventeen::FIRST, Seventeen::A);
-  assert_eq!(StructThree::FIRST, StructThree(Three::A));
-  assert_eq!(CompoundSeven::FIRST, CompoundSeven::X(Three::A));
+use super::types::{CompoundOnWideSeven, CompoundWideOnSeven};
+
+fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &Vec<T>) {
+  assert_eq!(T::FIRST, *values.first().unwrap());
+  assert_eq!(T::LAST, *values.last().unwrap());
+  assert_eq!(T::SIZE, values.len());
+  let test: Vec<T> = values.iter().copied().collect();
+  assert_eq!(T::SIZE, test.len());
+  for (i, (x, y)) in zip(test, values.iter().copied()).enumerate() {
+    assert_eq!(x, y);
+    assert_eq!(EnumIndex::from_value(x).into_usize(), i);
+    if i == 0 {
+      assert_eq!(x.prev(), None);
+      assert_eq!(x.prev_wrapped(), T::LAST);
+    } else {
+      assert_eq!(x.prev(), Some(values[i - 1]));
+      assert_eq!(x.prev_wrapped(), values[i - 1]);
+    }
+    if i == values.len() - 1 {
+      assert_eq!(x.next(), None);
+      assert_eq!(x.next_wrapped(), T::FIRST);
+    } else {
+      assert_eq!(x.next(), Some(values[i + 1]));
+      assert_eq!(x.next_wrapped(), values[i + 1]);
+    }
+  }
 }
 
 #[test]
-fn test_last() {
-  assert_eq!(Three::LAST, Three::C);
-  assert_eq!(Sixteen::LAST, Sixteen::P);
-  assert_eq!(Seventeen::LAST, Seventeen::Q);
-  assert_eq!(StructThree::LAST, StructThree(Three::C));
-  assert_eq!(CompoundSeven::LAST, CompoundSeven::Z(Three::C));
+fn test_three() {
+  test_type::<Three>(&vec![Three::A, Three::B, Three::C]);
+  test_type::<WideThree>(&vec![WideThree::A, WideThree::B, WideThree::C]);
 }
 
 #[test]
-fn test_next_simple() {
-  assert_eq!(Three::A.next(), Some(Three::B));
-  assert_eq!(Sixteen::A.next(), Some(Sixteen::B));
-  assert_eq!(Seventeen::A.next(), Some(Seventeen::B));
-  assert_eq!(StructThree(Three::A).next(), Some(StructThree(Three::B)));
-  assert_eq!(
-    EnumSize::from_last_value(Sixteen::D).next(Sixteen::A),
-    Some(Sixteen::B)
-  );
-  assert_eq!(CompoundSeven::Y.next(), Some(CompoundSeven::Z(Three::A)))
+fn test_struct() {
+  test_type::<StructOne>(&vec![StructOne]);
+  test_type::<StructThree>(&vec![
+    StructThree(Three::A),
+    StructThree(Three::B),
+    StructThree(Three::C),
+  ]);
 }
 
 #[test]
-fn test_next_boundary() {
-  assert_eq!(Three::C.next(), None);
-  assert_eq!(Sixteen::P.next(), None);
-  assert_eq!(Seventeen::Q.next(), None);
-  assert_eq!(StructThree(Three::C).next(), None);
-  let size = EnumSize::from_last_value(Sixteen::D);
-  assert_eq!(size.next(Sixteen::D), None);
-  assert_eq!(CompoundSeven::Z(Three::C).next(), None)
+fn test_compound_seven() {
+  test_type::<CompoundSeven>(&vec![
+    CompoundSeven::X(Three::A),
+    CompoundSeven::X(Three::B),
+    CompoundSeven::X(Three::C),
+    CompoundSeven::Y,
+    CompoundSeven::Z(Three::A),
+    CompoundSeven::Z(Three::B),
+    CompoundSeven::Z(Three::C),
+  ]);
+  test_type::<CompoundOnWideSeven>(&vec![
+    CompoundOnWideSeven::X(WideThree::A),
+    CompoundOnWideSeven::X(WideThree::B),
+    CompoundOnWideSeven::X(WideThree::C),
+    CompoundOnWideSeven::Y,
+    CompoundOnWideSeven::Z(WideThree::A),
+    CompoundOnWideSeven::Z(WideThree::B),
+    CompoundOnWideSeven::Z(WideThree::C),
+  ]);
+  test_type::<CompoundWideOnSeven>(&vec![
+    CompoundWideOnSeven::X(Three::A),
+    CompoundWideOnSeven::X(Three::B),
+    CompoundWideOnSeven::X(Three::C),
+    CompoundWideOnSeven::Y,
+    CompoundWideOnSeven::Z(Three::A),
+    CompoundWideOnSeven::Z(Three::B),
+    CompoundWideOnSeven::Z(Three::C),
+  ]);
 }
 
 #[test]
-fn test_next_wrapped() {
-  assert_eq!(Three::C.next_wrapped(), Three::A);
-  assert_eq!(Sixteen::P.next_wrapped(), Sixteen::A);
-  assert_eq!(Seventeen::Q.next_wrapped(), Seventeen::A);
-  assert_eq!(StructThree(Three::C).next_wrapped(), StructThree(Three::A));
-  let size = EnumSize::from_last_value(Sixteen::D);
-  assert_eq!(size.next_wrapped(Sixteen::D), Sixteen::A);
-  assert_eq!(
-    CompoundSeven::Z(Three::C).next_wrapped(),
-    CompoundSeven::X(Three::A)
-  )
+fn test_sixteen() {
+  test_type::<Sixteen>(&vec![
+    Sixteen::A,
+    Sixteen::B,
+    Sixteen::C,
+    Sixteen::D,
+    Sixteen::E,
+    Sixteen::F,
+    Sixteen::G,
+    Sixteen::H,
+    Sixteen::I,
+    Sixteen::J,
+    Sixteen::K,
+    Sixteen::L,
+    Sixteen::M,
+    Sixteen::N,
+    Sixteen::O,
+    Sixteen::P,
+  ]);
 }
 
 #[test]
-fn test_prev_simple() {
-  assert_eq!(Three::B.prev(), Some(Three::A));
-  assert_eq!(Sixteen::B.prev(), Some(Sixteen::A));
-  assert_eq!(Seventeen::B.prev(), Some(Seventeen::A));
-  assert_eq!(StructThree(Three::B).prev(), Some(StructThree(Three::A)));
-  let size = EnumSize::from_last_value(Sixteen::D);
-  assert_eq!(size.prev(Sixteen::B), Some(Sixteen::A));
-  assert_eq!(CompoundSeven::Y.prev_wrapped(), CompoundSeven::X(Three::C))
+fn test_seventeen() {
+  test_type::<Seventeen>(&vec![
+    Seventeen::A,
+    Seventeen::B,
+    Seventeen::C,
+    Seventeen::D,
+    Seventeen::E,
+    Seventeen::F,
+    Seventeen::G,
+    Seventeen::H,
+    Seventeen::I,
+    Seventeen::J,
+    Seventeen::K,
+    Seventeen::L,
+    Seventeen::M,
+    Seventeen::N,
+    Seventeen::O,
+    Seventeen::P,
+    Seventeen::Q,
+  ]);
 }
 
 #[test]
-fn test_prev_boundary() {
-  assert_eq!(Three::A.prev(), None);
-  assert_eq!(Sixteen::A.prev(), None);
-  assert_eq!(Seventeen::A.prev(), None);
-  assert_eq!(StructThree(Three::A).prev(), None);
-  let size = EnumSize::from_last_value(Sixteen::D);
-  assert_eq!(size.prev(Sixteen::A), None);
-  assert_eq!(CompoundSeven::X(Three::A).prev(), None);
-}
-
-#[test]
-fn test_prev_wrapped() {
-  assert_eq!(Three::A.prev_wrapped(), Three::C);
-  assert_eq!(Sixteen::A.prev_wrapped(), Sixteen::P);
-  assert_eq!(Seventeen::A.prev_wrapped(), Seventeen::Q);
-  assert_eq!(StructThree(Three::A).prev_wrapped(), StructThree(Three::C));
-  let size = EnumSize::from_last_value(Sixteen::D);
-  assert_eq!(size.prev_wrapped(Sixteen::A), Sixteen::D);
-  assert_eq!(
-    CompoundSeven::X(Three::A).prev_wrapped(),
-    CompoundSeven::Z(Three::C)
-  );
-}
-
-#[test]
-fn test_iter() {
-  let collected3: Vec<_> = Three::iter().collect();
-  assert_eq!(collected3, vec![Three::A, Three::B, Three::C]);
-  let collected7: Vec<_> = CompoundSeven::iter().collect();
-  assert_eq!(
-    collected7,
-    vec![
-      CompoundSeven::X(Three::A),
-      CompoundSeven::X(Three::B),
-      CompoundSeven::X(Three::C),
-      CompoundSeven::Y,
-      CompoundSeven::Z(Three::A),
-      CompoundSeven::Z(Three::B),
-      CompoundSeven::Z(Three::C),
-    ]
-  );
+fn test_three_hundred() {
+  assert_eq!(ThreeHundred::SIZE, 300);
 }

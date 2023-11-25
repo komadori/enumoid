@@ -14,7 +14,9 @@ fn align_word(x: usize, align: usize) -> usize {
   ((x + align - 1) / align) * align
 }
 
-fn test_type<T: EnumArrayHelper<u8> + EnumSetHelper<u8>>(
+fn test_type<
+  T: EnumArrayHelper<u8> + EnumSetHelper<u8> + EnumSetHelper<usize>,
+>(
   variants: usize,
   value_bytes: usize,
   word_bytes: usize,
@@ -24,6 +26,10 @@ fn test_type<T: EnumArrayHelper<u8> + EnumSetHelper<u8>>(
   assert_eq!(std::mem::size_of::<T>(), value_bytes);
   assert_eq!(std::mem::size_of::<EnumSize<T>>(), word_bytes);
   assert_eq!(std::mem::size_of::<EnumSet<T>>(), set_bytes);
+  assert_eq!(
+    std::mem::size_of::<EnumSet<T, usize>>(),
+    align_word(set_bytes, std::mem::size_of::<usize>())
+  );
   assert_eq!(std::mem::size_of::<EnumMap<T, u8>>(), variants);
   assert_eq!(
     std::mem::size_of::<EnumOptionMap<T, u8>>(),
@@ -38,10 +44,6 @@ fn test_type<T: EnumArrayHelper<u8> + EnumSetHelper<u8>>(
 #[test]
 fn test_three() {
   test_type::<Three>(3, 1, 1, 1);
-}
-
-#[test]
-fn test_wide_three() {
   test_type::<WideThree>(3, 1, 4, 1);
 }
 

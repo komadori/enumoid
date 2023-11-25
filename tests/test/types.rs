@@ -1,13 +1,13 @@
 use enumoid::Enumoid;
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub enum Three {
   A,
   B,
   C,
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 #[index_type(u32)]
 pub enum WideThree {
   A,
@@ -15,27 +15,27 @@ pub enum WideThree {
   C,
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub struct StructOne;
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub struct StructThree(pub Three);
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub enum CompoundSeven {
   X(Three),
   Y,
   Z(Three),
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub enum CompoundOnWideSeven {
   X(WideThree),
   Y,
   Z(WideThree),
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 #[index_type(u32)]
 pub enum CompoundWideOnSeven {
   X(Three),
@@ -43,7 +43,7 @@ pub enum CompoundWideOnSeven {
   Z(Three),
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub enum Sixteen {
   A,
   B,
@@ -63,7 +63,7 @@ pub enum Sixteen {
   P,
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 pub enum Seventeen {
   A,
   B,
@@ -84,7 +84,7 @@ pub enum Seventeen {
   Q,
 }
 
-#[derive(Debug, Enumoid, PartialEq)]
+#[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 #[index_type(u16)]
 pub enum ThreeHundred {
   A1,
