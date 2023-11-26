@@ -9,6 +9,7 @@ pub enum Three {
 
 #[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
 #[index_type(u32)]
+#[bitset_word_types(u8, u16, usize)]
 pub enum WideThree {
   A,
   B,

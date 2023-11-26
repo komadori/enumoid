@@ -51,6 +51,21 @@ fn get_index_type(
   Ok(quote! { u8 })
 }
 
+fn get_bitset_word_types(
+  input: &syn::DeriveInput,
+) -> Result<Vec<proc_macro2::TokenStream>> {
+  let mut tys = vec![quote! {u8}, quote! {usize}];
+  for attr in input.attrs.iter() {
+    if attr.path().is_ident("bitset_word_types") {
+      let ty_list = attr.parse_args_with(syn::punctuated::Punctuated::<syn::TypePath, syn::Token![,]>::parse_terminated)?;
+      tys.clear();
+      for ty in ty_list {
+        tys.push(ty.into_token_stream())
+      }
+    }
+  }
+  Ok(tys)
+}
 struct Rule {
   size: proc_macro2::TokenStream,
   consts: proc_macro2::TokenStream,
@@ -146,6 +161,7 @@ fn try_derive_enumoid(
   let input: syn::DeriveInput = syn::parse(input).unwrap();
   let word_type = get_index_type(&input)?;
   let word_type_error = format!("Index type '{}' is too narrow.", word_type);
+  let bitset_word_types = get_bitset_word_types(&input)?;
   let name = input.ident;
   let rules = if let syn::Data::Enum(data_enum) = input.data {
     if data_enum.variants.is_empty() {
@@ -246,26 +262,18 @@ fn try_derive_enumoid(
         p
       }
     }
-    impl enumoid::EnumSetHelper<u8> for #name {
-      type BitsetWord = u8;
-      type BitsetArray = [u8; <Self as enumoid::EnumSetHelper<u8>>::BITSET_WORDS];
-      const BITSET_WORD_BITS: usize = 8;
-      const DEFAULT_BITSET: Self::BitsetArray = [0; <Self as enumoid::EnumSetHelper<u8>>::BITSET_WORDS];
-      #[inline(always)]
-      fn slice_bitset(arr: &Self::BitsetArray) -> &[u8] { arr }
-      #[inline(always)]
-      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [u8] { arr }
-    }
-    impl enumoid::EnumSetHelper<usize> for #name {
-      type BitsetWord = usize;
-      type BitsetArray = [usize; <Self as enumoid::EnumSetHelper<usize>>::BITSET_WORDS];
-      const BITSET_WORD_BITS: usize = usize::BITS as usize;
-      const DEFAULT_BITSET: Self::BitsetArray = [0; <Self as enumoid::EnumSetHelper<usize>>::BITSET_WORDS];
-      #[inline(always)]
-      fn slice_bitset(arr: &Self::BitsetArray) -> &[usize] { arr }
-      #[inline(always)]
-      fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [usize] { arr }
-    }
+    #(
+      impl enumoid::EnumSetHelper<#bitset_word_types> for #name {
+        type BitsetWord = #bitset_word_types;
+        type BitsetArray = [#bitset_word_types; <Self as enumoid::EnumSetHelper<#bitset_word_types>>::BITSET_WORDS];
+        const BITSET_WORD_BITS: usize = <#bitset_word_types>::BITS as usize;
+        const DEFAULT_BITSET: Self::BitsetArray = [0; <Self as enumoid::EnumSetHelper<#bitset_word_types>>::BITSET_WORDS];
+        #[inline(always)]
+        fn slice_bitset(arr: &Self::BitsetArray) -> &[#bitset_word_types] { arr }
+        #[inline(always)]
+        fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [#bitset_word_types] { arr }
+      }
+    )*
     impl core::convert::From<enumoid::EnumIndex<#name>> for #name {
       #[inline]
       fn from(index: enumoid::EnumIndex<#name>) -> Self {
@@ -278,7 +286,7 @@ fn try_derive_enumoid(
 /// Derive macro which implements the `Enumoid`, `EnumArrayHelper<V>`,
 /// `EnumSetHelper<BitsetWord>`, and `From<EnumIndex<T>>` traits for
 /// a type.
-#[proc_macro_derive(Enumoid, attributes(index_type))]
+#[proc_macro_derive(Enumoid, attributes(index_type, bitset_word_types))]
 pub fn derive_enumoid(
   input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {

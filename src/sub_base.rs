@@ -70,4 +70,7 @@ macro_rules! impl_bitset_word_trait {
 }
 
 impl_bitset_word_trait!(u8);
+impl_bitset_word_trait!(u16);
+impl_bitset_word_trait!(u32);
+impl_bitset_word_trait!(u64);
 impl_bitset_word_trait!(usize);
