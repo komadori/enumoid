@@ -266,10 +266,18 @@ fn try_derive_enumoid(
       #[inline(always)]
       fn slice_bitset_mut(arr: &mut Self::BitsetArray) -> &mut [usize] { arr }
     }
+    impl core::convert::From<enumoid::EnumIndex<#name>> for #name {
+      #[inline]
+      fn from(index: enumoid::EnumIndex<#name>) -> Self {
+        index.into_value()
+      }
+    }
   })
 }
 
-/// Derive macro which implements the `Enumoid` trait
+/// Derive macro which implements the `Enumoid`, `EnumArrayHelper<V>`,
+/// `EnumSetHelper<BitsetWord>`, and `From<EnumIndex<T>>` traits for
+/// a type.
 #[proc_macro_derive(Enumoid, attributes(index_type))]
 pub fn derive_enumoid(
   input: proc_macro::TokenStream,
