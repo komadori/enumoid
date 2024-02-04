@@ -82,7 +82,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   /// Returns a reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
   pub fn get(&self, key: T) -> Option<&V> {
-    self.get_by_index(EnumIndex::from_value(key))
+    self.get_by_index(key.into())
   }
 
   /// Returns a mutable reference to the value associated with a given index,
@@ -94,7 +94,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   /// Returns a mutable reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
-    self.get_by_index_mut(EnumIndex::from_value(key))
+    self.get_by_index_mut(key.into())
   }
 
   /// Returns true if the vector is empty.
