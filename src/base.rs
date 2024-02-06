@@ -77,17 +77,39 @@ impl<T: Enumoid> EnumSize<T> {
     }
   }
 
+  /// Returns the next index or None.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
+  #[inline]
+  pub fn next_index(&self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
+    assert!(index.0 < self.0);
+    let nw = index.0.inc();
+    if nw < self.0 {
+      Some(unsafe { EnumIndex::from_word_unchecked(nw) })
+    } else {
+      None
+    }
+  }
+
   /// Returns the next element or None.
   ///
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
   pub fn next(&self, value: T) -> Option<T> {
-    let w = value.into_word();
-    assert!(w < self.0);
-    let nw = w.inc();
-    if nw < self.0 {
-      Some(unsafe { T::from_word_unchecked(nw) })
+    self.next_index(value.into()).map(|i| i.into_value())
+  }
+
+  /// Returns the previous index or None.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
+  #[inline]
+  pub fn prev_index(&self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
+    assert!(index.0 < self.0);
+    if index.0 > T::Word::ZERO {
+      Some(unsafe { EnumIndex::from_word_unchecked(index.0.dec()) })
     } else {
       None
     }
@@ -99,13 +121,19 @@ impl<T: Enumoid> EnumSize<T> {
   /// Panics if the value is beyond the size.
   #[inline]
   pub fn prev(&self, value: T) -> Option<T> {
-    let w = value.into_word();
-    assert!(w < self.0);
-    if w > T::Word::ZERO {
-      Some(unsafe { T::from_word_unchecked(w.dec()) })
-    } else {
-      None
-    }
+    self.prev_index(value.into()).map(|i| i.into_value())
+  }
+
+  /// Returns the next index or wraps around to the beginning.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
+  #[inline]
+  pub fn next_index_wrapped(&self, index: EnumIndex<T>) -> EnumIndex<T> {
+    assert!(index.0 < self.0);
+    let nw = index.0.inc();
+    let q = if nw < self.0 { nw } else { T::Word::ZERO };
+    unsafe { EnumIndex::from_word_unchecked(q) }
   }
 
   /// Returns the next element or wraps around to the beginning.
@@ -114,11 +142,23 @@ impl<T: Enumoid> EnumSize<T> {
   /// Panics if the value is beyond the size.
   #[inline]
   pub fn next_wrapped(&self, value: T) -> T {
-    let w = value.into_word();
-    assert!(w < self.0);
-    let nw = w.inc();
-    let q = if nw < self.0 { nw } else { T::Word::ZERO };
-    unsafe { T::from_word_unchecked(q) }
+    self.next_index_wrapped(value.into()).into_value()
+  }
+
+  /// Returns the previous index or wraps around to the end.
+  ///
+  /// # Panics
+  /// Panics if the value is beyond the size.
+  #[inline]
+  pub fn prev_index_wrapped(&self, index: EnumIndex<T>) -> EnumIndex<T> {
+    assert!(index.0 < self.0);
+    let q = if index.0 > T::Word::ZERO {
+      index.0
+    } else {
+      self.0
+    }
+    .dec();
+    unsafe { EnumIndex::from_word_unchecked(q) }
   }
 
   /// Returns the previous element or wraps around to the end.
@@ -127,10 +167,12 @@ impl<T: Enumoid> EnumSize<T> {
   /// Panics if the value is beyond the size.
   #[inline]
   pub fn prev_wrapped(&self, value: T) -> T {
-    let w = value.into_word();
-    assert!(w < self.0);
-    let q = if w > T::Word::ZERO { w } else { self.0 }.dec();
-    unsafe { T::from_word_unchecked(q) }
+    self.prev_index_wrapped(value.into()).into_value()
+  }
+
+  #[inline]
+  pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
+    index.0 < self.0
   }
 
   #[inline]
@@ -228,6 +270,22 @@ impl<T: Enumoid> EnumIndex<T> {
   #[inline]
   pub fn into_usize(self) -> usize {
     self.into_word().as_()
+  }
+
+  pub fn next(self) -> Option<Self> {
+    EnumSize::FULL.next_index(self)
+  }
+
+  pub fn prev(self) -> Option<Self> {
+    EnumSize::FULL.prev_index(self)
+  }
+
+  pub fn next_wrapped(self) -> Self {
+    EnumSize::FULL.next_index_wrapped(self)
+  }
+
+  pub fn prev_wrapped(self) -> Self {
+    EnumSize::FULL.prev_index_wrapped(self)
   }
 }
 
