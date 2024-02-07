@@ -1,10 +1,10 @@
 //! This crate provides Enumoid's derive macro.
 //!
 //! ```
-//! # use enumoid_derive::Enumoid;
+//! # use enumoid::*;
 //! #
 //! #[derive(Enumoid)]
-//! # enum E {}
+//! # enum E { One }
 //! #
 //! # fn main() {}
 //! ```
@@ -94,22 +94,22 @@ fn generate_enum_rules(
       let kne = format_ident!("K{}E", index.to_string());
       let sub_ty = field.ty.clone();
       let curr = next;
-      next = quote! { #kns + <#sub_ty as Enumoid>::SIZE_WORD as <#name as Enumoid>::Word };
+      next = quote! { #kns + <#sub_ty as enumoid::Enumoid>::SIZE_WORD as <#name as enumoid::Enumoid>::Word };
       Rule {
-        size: quote! { <#sub_ty as Enumoid>::SIZE },
+        size: quote! { <#sub_ty as enumoid::Enumoid>::SIZE },
         consts: quote! {
-          const #kns: <#name as Enumoid>::Word = #curr;
-          const #kne: <#name as Enumoid>::Word = #next - 1;
+          const #kns: <#name as enumoid::Enumoid>::Word = #curr;
+          const #kne: <#name as enumoid::Enumoid>::Word = #next - 1;
         },
-        to_expr: quote! { Self::#v_name(x) => #kns + x.into_word() as <#name as Enumoid>::Word, },
-        from_expr: quote! { x@#kns..=#kne => Self::#v_name(#sub_ty::from_word_unchecked((x-#kns) as <#sub_ty as Enumoid>::Word)), },
+        to_expr: quote! { Self::#v_name(x) => #kns + x.into_word() as <#name as enumoid::Enumoid>::Word, },
+        from_expr: quote! { x@#kns..=#kne => Self::#v_name(#sub_ty::from_word_unchecked((x-#kns) as <#sub_ty as enumoid::Enumoid>::Word)), },
         first: quote! { Self::#v_name(#sub_ty::FIRST) },
         last: quote! { Self::#v_name(#sub_ty::LAST) },
       }
     } else {
       let rule = Rule {
         size: quote! { 1 },
-        consts: quote! { const #kns: <#name as Enumoid>::Word = #next; },
+        consts: quote! { const #kns: <#name as enumoid::Enumoid>::Word = #next; },
         to_expr: quote! { Self::#v_name => #kns, },
         from_expr: quote! { #kns => Self::#v_name, },
         first: quote! { Self::#v_name },
@@ -135,12 +135,12 @@ fn generate_struct_rules(
     }
     let sub_ty = field.ty.clone();
     Rule {
-      size: quote! { <#sub_ty as Enumoid>::SIZE },
+      size: quote! { <#sub_ty as enumoid::Enumoid>::SIZE },
       consts: quote! {},
-      to_expr: quote! { #name(x) => x.into_word() as <#name as Enumoid>::Word, },
-      from_expr: quote! { x => #name(#sub_ty::from_word_unchecked((x) as <#sub_ty as Enumoid>::Word)), },
-      first: quote! { #name(<#sub_ty as Enumoid>::FIRST) },
-      last: quote! { #name(<#sub_ty as Enumoid>::LAST) },
+      to_expr: quote! { #name(x) => x.into_word() as <#name as enumoid::Enumoid>::Word, },
+      from_expr: quote! { x => #name(#sub_ty::from_word_unchecked((x) as <#sub_ty as enumoid::Enumoid>::Word)), },
+      first: quote! { #name(<#sub_ty as enumoid::Enumoid>::FIRST) },
+      last: quote! { #name(<#sub_ty as enumoid::Enumoid>::LAST) },
     }
   } else {
     Rule {
