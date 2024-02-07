@@ -107,6 +107,11 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     self.len == T::SIZE_WORD
   }
 
+  /// Returns true if the vector contains the index.
+  pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
+    index.into_word() < self.len
+  }
+
   /// Returns true if the vector contains the key.
   pub fn contains(&self, value: T) -> bool {
     value.into_word() < self.len

@@ -39,7 +39,7 @@ impl<
   /// or `None` if the index has no value in the map.
   #[inline]
   pub fn get_by_index(&self, index: EnumIndex<T>) -> Option<&V> {
-    if self.valid.contains_by_index(index) {
+    if self.valid.contains_index(index) {
       Some(unsafe {
         T::partial_slice(&self.data)[index.into_usize()].assume_init_ref()
       })
@@ -57,7 +57,7 @@ impl<
   /// Returns a mutable reference to the value associated with a given index,
   /// or `None` if the index has no value in the map.
   pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> Option<&mut V> {
-    if self.valid.contains_by_index(index) {
+    if self.valid.contains_index(index) {
       Some(unsafe {
         T::partial_slice_mut(&mut self.data)[index.into_usize()]
           .assume_init_mut()
@@ -76,7 +76,7 @@ impl<
   /// Sets the value associated with a given index.
   pub fn set_by_index(&mut self, index: EnumIndex<T>, value: Option<V>) {
     let cell = &mut T::partial_slice_mut(&mut self.data)[index.into_usize()];
-    if self.valid.contains_by_index(index) {
+    if self.valid.contains_index(index) {
       unsafe { cell.assume_init_drop() };
     }
     self.valid.set_by_index(index, value.is_some());
@@ -95,7 +95,7 @@ impl<
     let data = T::partial_slice_mut(&mut self.data);
     for key in T::iter() {
       let index = key.into();
-      if self.valid.contains_by_index(index) {
+      if self.valid.contains_index(index) {
         let cell = &mut data[index.into_usize()];
         unsafe { cell.assume_init_drop() };
       }
@@ -132,6 +132,11 @@ impl<
       }
     }
     Some(unsafe { EnumSize::<T>::from_word_unchecked(size) })
+  }
+
+  /// Returns true if the map contains the index.
+  pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
+    self.valid.contains_index(index)
   }
 
   /// Returns true if the map contains the key.
