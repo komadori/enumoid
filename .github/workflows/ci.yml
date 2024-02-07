@@ -19,7 +19,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test
 
-  miri:
+  test-derive:
+    name: Test Suite (Derive)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
+        working-directory: ./enumoid_derive
+
+  test-miri:
     name: Test Suite (Miri)
     runs-on: ubuntu-latest
     steps:
