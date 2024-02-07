@@ -50,12 +50,14 @@ impl<
 
   /// Returns a reference to the value associated with a given key,
   /// or `None` if the key has no value in the map.
+  #[inline]
   pub fn get(&self, key: T) -> Option<&V> {
     self.get_by_index(key.into())
   }
 
   /// Returns a mutable reference to the value associated with a given index,
   /// or `None` if the index has no value in the map.
+  #[inline]
   pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> Option<&mut V> {
     if self.valid.contains_index(index) {
       Some(unsafe {
@@ -69,11 +71,13 @@ impl<
 
   /// Returns a mutable reference to the value associated with a given key,
   /// or `None` if the key has no value in the map.
+  #[inline]
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
     self.get_by_index_mut(key.into())
   }
 
   /// Sets the value associated with a given index.
+  #[inline]
   pub fn set_by_index(&mut self, index: EnumIndex<T>, value: Option<V>) {
     let cell = &mut T::partial_slice_mut(&mut self.data)[index.into_usize()];
     if self.valid.contains_index(index) {
@@ -86,6 +90,7 @@ impl<
   }
 
   /// Sets the value associated with a given key.
+  #[inline]
   pub fn set(&mut self, key: T, value: Option<V>) {
     self.set_by_index(key.into(), value)
   }
@@ -135,11 +140,13 @@ impl<
   }
 
   /// Returns true if the map contains the index.
+  #[inline]
   pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
     self.valid.contains_index(index)
   }
 
   /// Returns true if the map contains the key.
+  #[inline]
   pub fn contains(&self, value: T) -> bool {
     self.valid.contains(value)
   }

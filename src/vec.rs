@@ -44,6 +44,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   /// Returns a slice containing all the values in the vector.
+  #[inline]
   pub fn as_slice(&self) -> &[V] {
     unsafe {
       hint_assert!(
@@ -59,6 +60,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   /// Returns a mutable slice containing all the values in the vector.
+  #[inline]
   pub fn as_slice_mut(&mut self) -> &mut [V] {
     unsafe {
       hint_assert!(
@@ -75,49 +77,58 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
 
   /// Returns a reference to the value associated with a given index,
   /// or `None` if the index is beyond the end of the vector.
+  #[inline]
   pub fn get_by_index(&self, index: EnumIndex<T>) -> Option<&V> {
     self.as_slice().get(index.into_usize())
   }
 
   /// Returns a reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
+  #[inline]
   pub fn get(&self, key: T) -> Option<&V> {
     self.get_by_index(key.into())
   }
 
   /// Returns a mutable reference to the value associated with a given index,
   /// or `None` if the index is beyond the end of the vector.
+  #[inline]
   pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> Option<&mut V> {
     self.as_slice_mut().get_mut(index.into_usize())
   }
 
   /// Returns a mutable reference to the value associated with a given key,
   /// or `None` if the key is beyond the end of the vector.
+  #[inline]
   pub fn get_mut(&mut self, key: T) -> Option<&mut V> {
     self.get_by_index_mut(key.into())
   }
 
   /// Returns true if the vector is empty.
+  #[inline]
   pub fn is_empty(&self) -> bool {
     self.len == T::Word::ZERO
   }
 
   /// Returns true if the vector is fully populated.
+  #[inline]
   pub fn is_full(&self) -> bool {
     self.len == T::SIZE_WORD
   }
 
   /// Returns true if the vector contains the index.
+  #[inline]
   pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
     index.into_word() < self.len
   }
 
   /// Returns true if the vector contains the key.
+  #[inline]
   pub fn contains(&self, value: T) -> bool {
     value.into_word() < self.len
   }
 
   /// Returns the size of the vector.
+  #[inline]
   pub fn size(&self) -> EnumSize<T> {
     unsafe { EnumSize::from_word_unchecked(self.len) }
   }

@@ -41,36 +41,43 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   }
 
   /// Returns a slice containing all the values in the map.
+  #[inline]
   pub fn as_slice(&self) -> &[V] {
     T::total_slice(&self.data)
   }
 
   /// Returns a mutable slice containing all the values in the map.
+  #[inline]
   pub fn as_slice_mut(&mut self) -> &mut [V] {
     T::total_slice_mut(&mut self.data)
   }
 
   /// Returns a reference to the value associated with a given index.
+  #[inline]
   pub fn get_by_index(&self, index: EnumIndex<T>) -> &V {
     &self[index]
   }
 
   /// Returns a reference to the value associated with a given key.
+  #[inline]
   pub fn get(&self, key: T) -> &V {
     &self[key]
   }
 
   /// Returns a mutable reference to the value associated with a given index.
+  #[inline]
   pub fn get_by_index_mut(&mut self, index: EnumIndex<T>) -> &mut V {
     &mut self[index]
   }
 
   /// Returns a mutable reference to the value associated with a given key.
+  #[inline]
   pub fn get_mut(&mut self, key: T) -> &mut V {
     &mut self[key]
   }
 
   /// Swaps two elements in the map.
+  #[inline]
   pub fn swap(&mut self, a: T, b: T) {
     self
       .as_slice_mut()
