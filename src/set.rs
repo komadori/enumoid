@@ -78,12 +78,12 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
   /// Returns true if a specific member index is in the set.
   #[inline]
   pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
-    let i = index.into_word();
-    let j = i.as_() / T::BITSET_WORD_BITS;
+    let i = index.into_usize();
+    let j = i / T::BITSET_WORD_BITS;
     let slice = T::slice_bitset(&self.data);
     let bits = unsafe { *slice.get_unchecked(j) };
-    (bits >> (i.as_() % T::BITSET_WORD_BITS)) & T::BitsetWord::ONE
-      == T::BitsetWord::ONE
+    (bits >> (i % T::BITSET_WORD_BITS)) & T::BitsetWord::ONE
+      != T::BitsetWord::ZERO
   }
 
   /// Returns true if a specific member is in the set.
