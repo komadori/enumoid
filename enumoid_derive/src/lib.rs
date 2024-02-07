@@ -1,7 +1,7 @@
 //! This crate provides Enumoid's derive macro.
 //!
 //! ```
-//! # use enumoid::*;
+//! # use enumoid_derive::Enumoid;
 //! #
 //! #[derive(Enumoid)]
 //! # enum E { One }
@@ -235,8 +235,8 @@ fn try_derive_enumoid(
       }
     }
     impl<V> enumoid::EnumArrayHelper<V> for #name {
-      type PartialArray = [std::mem::MaybeUninit<V>; Self::SIZE];
-      type TotalArray = [V; Self::SIZE];
+      type PartialArray = [std::mem::MaybeUninit<V>; <Self as enumoid::Enumoid>::SIZE];
+      type TotalArray = [V; <Self as enumoid::Enumoid>::SIZE];
       #[inline(always)]
       fn partial_slice(p: &Self::PartialArray)
         -> &[std::mem::MaybeUninit<V>] { p }
