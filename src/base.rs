@@ -272,18 +272,26 @@ impl<T: Enumoid> EnumIndex<T> {
     self.into_word().as_()
   }
 
+  /// Returns the next index or None.
+  #[inline]
   pub fn next(self) -> Option<Self> {
     EnumSize::FULL.next_index(self)
   }
 
+  /// Returns the previous index or None.
+  #[inline]
   pub fn prev(self) -> Option<Self> {
     EnumSize::FULL.prev_index(self)
   }
 
+  /// Returns the next index or wraps around to the beginning.
+  #[inline]
   pub fn next_wrapped(self) -> Self {
     EnumSize::FULL.next_index_wrapped(self)
   }
 
+  /// Returns the previous index or wraps around to the end.
+  #[inline]
   pub fn prev_wrapped(self) -> Self {
     EnumSize::FULL.prev_index_wrapped(self)
   }
