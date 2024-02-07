@@ -1,5 +1,17 @@
 # Changelog
 
+## Enumoid 0.4.0 (2024-02-07)
+
+### Added
+- Added support for unary structs and enum variants.
+- Added generic bitset word size to EnumSet and EnumOptionMap.
+- Added EnumIndex type and related container methods.
+
+### Changed
+- Renamed EnumFlags to EnumSet.
+- Renamed Size to EnumSize.
+- Removed support for uninhabited enums.
+
 ## Enumoid 0.3.0 (2023-08-31)
 
 ### Added
