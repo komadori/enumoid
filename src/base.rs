@@ -421,8 +421,7 @@ pub trait EnumSetHelper<BitsetWord: BitsetWordTrait>: Enumoid {
   #[doc(hidden)]
   const BITSET_WORD_BITS: usize;
   #[doc(hidden)]
-  const BITSET_WORDS: usize =
-    (Self::SIZE + Self::BITSET_WORD_BITS - 1) / Self::BITSET_WORD_BITS;
+  const BITSET_WORDS: usize = Self::SIZE.div_ceil(Self::BITSET_WORD_BITS);
   #[doc(hidden)]
   const DEFAULT_BITSET: Self::BitsetArray;
   #[doc(hidden)]

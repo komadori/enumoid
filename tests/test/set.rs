@@ -4,13 +4,13 @@ use enumoid::EnumSet;
 #[test]
 fn test_flags() {
   let mut flags = EnumSet::<Three>::new();
-  assert_eq!(flags.any(), false);
+  assert!(!flags.any());
   assert_eq!(flags.count(), 0);
-  assert_eq!(flags.contains(Three::B), false);
+  assert!(!flags.contains(Three::B));
   flags.set(Three::B, true);
-  assert_eq!(flags.any(), true);
+  assert!(flags.any());
   assert_eq!(flags.count(), 1);
-  assert_eq!(flags.contains(Three::B), true);
+  assert!(flags.contains(Three::B));
   let collected: Vec<_> = flags.iter().collect();
   assert_eq!(
     collected,

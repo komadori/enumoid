@@ -11,7 +11,7 @@ use enumoid::EnumSize;
 use enumoid::EnumVec;
 
 fn align_word(x: usize, align: usize) -> usize {
-  ((x + align - 1) / align) * align
+  x.div_ceil(align) * align
 }
 
 fn test_type<

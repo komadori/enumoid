@@ -7,11 +7,11 @@ use std::{fmt::Debug, iter::zip};
 
 use super::types::{CompoundOnWideSeven, CompoundWideOnSeven};
 
-fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &Vec<T>) {
+fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &[T]) {
   assert_eq!(T::FIRST, *values.first().unwrap());
   assert_eq!(T::LAST, *values.last().unwrap());
   assert_eq!(T::SIZE, values.len());
-  let test: Vec<T> = values.iter().copied().collect();
+  let test: Vec<T> = values.to_vec();
   assert_eq!(T::SIZE, test.len());
   for (i, (x, y)) in zip(test, values.iter().copied()).enumerate() {
     assert_eq!(x, y);
@@ -35,14 +35,14 @@ fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &Vec<T>) {
 
 #[test]
 fn test_three() {
-  test_type::<Three>(&vec![Three::A, Three::B, Three::C]);
-  test_type::<WideThree>(&vec![WideThree::A, WideThree::B, WideThree::C]);
+  test_type::<Three>(&[Three::A, Three::B, Three::C]);
+  test_type::<WideThree>(&[WideThree::A, WideThree::B, WideThree::C]);
 }
 
 #[test]
 fn test_struct() {
-  test_type::<StructOne>(&vec![StructOne]);
-  test_type::<StructThree>(&vec![
+  test_type::<StructOne>(&[StructOne]);
+  test_type::<StructThree>(&[
     StructThree(Three::A),
     StructThree(Three::B),
     StructThree(Three::C),
@@ -51,7 +51,7 @@ fn test_struct() {
 
 #[test]
 fn test_compound_seven() {
-  test_type::<CompoundSeven>(&vec![
+  test_type::<CompoundSeven>(&[
     CompoundSeven::X(Three::A),
     CompoundSeven::X(Three::B),
     CompoundSeven::X(Three::C),
@@ -60,7 +60,7 @@ fn test_compound_seven() {
     CompoundSeven::Z(Three::B),
     CompoundSeven::Z(Three::C),
   ]);
-  test_type::<CompoundOnWideSeven>(&vec![
+  test_type::<CompoundOnWideSeven>(&[
     CompoundOnWideSeven::X(WideThree::A),
     CompoundOnWideSeven::X(WideThree::B),
     CompoundOnWideSeven::X(WideThree::C),
@@ -69,7 +69,7 @@ fn test_compound_seven() {
     CompoundOnWideSeven::Z(WideThree::B),
     CompoundOnWideSeven::Z(WideThree::C),
   ]);
-  test_type::<CompoundWideOnSeven>(&vec![
+  test_type::<CompoundWideOnSeven>(&[
     CompoundWideOnSeven::X(Three::A),
     CompoundWideOnSeven::X(Three::B),
     CompoundWideOnSeven::X(Three::C),
@@ -82,7 +82,7 @@ fn test_compound_seven() {
 
 #[test]
 fn test_sixteen() {
-  test_type::<Sixteen>(&vec![
+  test_type::<Sixteen>(&[
     Sixteen::A,
     Sixteen::B,
     Sixteen::C,
@@ -104,7 +104,7 @@ fn test_sixteen() {
 
 #[test]
 fn test_seventeen() {
-  test_type::<Seventeen>(&vec![
+  test_type::<Seventeen>(&[
     Seventeen::A,
     Seventeen::B,
     Seventeen::C,
