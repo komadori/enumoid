@@ -13,9 +13,9 @@ fn test_vec() {
   vec.push(200);
   assert_eq!(vec[Three::A], 100);
   assert_eq!(vec[Three::B], 200);
-  assert_eq!(vec.size(), EnumSize::from_last_value(Three::B));
+  assert_eq!(vec.size(), EnumSize::from_last(Three::B));
   vec.push(300);
-  assert_eq!(vec.size(), EnumSize::from_last_value(Three::C));
+  assert_eq!(vec.size(), EnumSize::from_last(Three::C));
   assert_eq!(vec.pop(), Some(300));
   assert_eq!(vec.get(Three::C), None);
   vec[Three::B] += 1;

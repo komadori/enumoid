@@ -97,12 +97,17 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
     self.contains_index(key.into())
   }
 
+  /// Returns an iterator over the indices of the members of the set.
+  #[inline]
+  pub fn iter_index(&self) -> EnumSetIndexIter<T, BitsetWord> {
+    EnumSetIndexIter::new(self)
+  }
+
   /// Returns an iterator over the members of the set.
   #[inline]
   pub fn iter(&self) -> EnumSetIter<T, BitsetWord> {
     EnumSetIter {
-      flags: self,
-      iter: T::word_range(T::Word::ZERO, T::SIZE_WORD),
+      iter: self.iter_index(),
     }
   }
 
@@ -135,7 +140,7 @@ impl<T: EnumSetHelper<BitsetWord> + Debug, BitsetWord: BitsetWordTrait> Debug
   for EnumSet<T, BitsetWord>
 {
   fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-    fmt.debug_map().entries(self.iter()).finish()
+    fmt.debug_set().entries(self.iter()).finish()
   }
 }
 
@@ -186,25 +191,82 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Index<T>
   }
 }
 
-pub struct EnumSetIter<
+pub struct EnumSetIndexIter<
   'a,
   T: EnumSetHelper<BitsetWord>,
   BitsetWord: BitsetWordTrait,
 > {
   flags: &'a EnumSet<T, BitsetWord>,
-  iter: T::WordRange,
+  current: T::BitsetWord,
+  word_index: usize,
+}
+
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  EnumSetIndexIter<'a, T, BitsetWord>
+{
+  pub fn new(flags: &'a EnumSet<T, BitsetWord>) -> Self {
+    let slice = T::slice_bitset(&flags.data);
+    let current = slice.first().copied().unwrap_or(T::BitsetWord::ZERO);
+    Self {
+      flags,
+      current,
+      word_index: 0,
+    }
+  }
+}
+
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
+  for EnumSetIndexIter<'a, T, BitsetWord>
+{
+  type Item = EnumIndex<T>;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    let slice = T::slice_bitset(&self.flags.data);
+    while self.current == T::BitsetWord::ZERO {
+      self.word_index += 1;
+      self.current = slice.get(self.word_index).copied()?;
+    }
+    let index =
+      self.word_index * T::BITSET_WORD_BITS + self.current.trailing_zeros();
+    self.current = self.current & (self.current - T::BitsetWord::ONE);
+    EnumIndex::from_usize(index)
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let current_count = self.current.count_ones();
+    let eff_word_index =
+      self.word_index + if current_count > 0 { 1 } else { 0 };
+    (
+      current_count,
+      Some(
+        T::SIZE.saturating_sub(eff_word_index * T::BITSET_WORD_BITS)
+          + current_count,
+      ),
+    )
+  }
+}
+
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  ExactSizeIterator for EnumSetIndexIter<'a, T, BitsetWord>
+{
+}
+
+pub struct EnumSetIter<
+  'a,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> {
+  iter: EnumSetIndexIter<'a, T, BitsetWord>,
 }
 
 impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   for EnumSetIter<'a, T, BitsetWord>
 {
-  type Item = (T, bool);
+  type Item = T;
 
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    let word = self.iter.next()?;
-    let index = unsafe { EnumIndex::from_word_unchecked(word) };
-    Some((index.into_value(), self.flags.contains_index(index)))
+    self.iter.next().map(|index| index.into_value())
   }
 
   #[inline]

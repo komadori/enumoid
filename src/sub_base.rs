@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::ops::{BitAnd, BitOr, Not, Shl, Shr};
+use std::ops::{BitAnd, BitOr, Not, Shl, Shr, Sub};
 
-pub trait RawSizeWord: Copy + Debug + Eq + Ord {
+pub trait RawSizeWord: Copy + Debug + Eq + Ord + Hash {
   const ZERO: Self;
   fn inc(self) -> Self;
   fn dec(self) -> Self;
@@ -49,11 +49,13 @@ pub trait BitsetWordTrait:
   + Not<Output = Self>
   + Shl<usize, Output = Self>
   + Shr<usize, Output = Self>
+  + Sub<Output = Self>
 {
   const ZERO: Self;
   const ONE: Self;
   const ALL_SET: Self;
   fn count_ones(self) -> usize;
+  fn trailing_zeros(self) -> usize;
 }
 
 macro_rules! impl_bitset_word_trait {
@@ -64,6 +66,9 @@ macro_rules! impl_bitset_word_trait {
       const ALL_SET: Self = !0;
       fn count_ones(self) -> usize {
         self.count_ones() as usize
+      }
+      fn trailing_zeros(self) -> usize {
+        self.trailing_zeros() as usize
       }
     }
   };

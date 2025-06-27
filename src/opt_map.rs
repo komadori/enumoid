@@ -3,7 +3,6 @@ use crate::base::EnumSetHelper;
 use crate::base::EnumSize;
 use crate::set::EnumSet;
 use crate::sub_base::BitsetWordTrait;
-use crate::sub_base::RawSizeWord;
 use crate::EnumIndex;
 use std::hash::Hash;
 use std::mem;
@@ -124,19 +123,14 @@ impl<
   /// A map is representable by vector if all the populated values
   /// are contiguous with the first key, or if the map is empty.
   pub fn is_vec(&self) -> Option<EnumSize<T>> {
-    let mut seen_none = false;
-    let mut size = T::Word::ZERO;
-    for (k, v) in self.valid.iter() {
-      if v {
-        if seen_none {
-          return None;
-        }
-        size = T::into_word(k).inc();
-      } else {
-        seen_none = true;
+    let mut size = EnumSize::<T>::EMPTY;
+    for i in self.valid.iter_index() {
+      size = size.increase()?;
+      if size.into_last_index() != Some(i) {
+        return None;
       }
     }
-    Some(unsafe { EnumSize::<T>::from_word_unchecked(size) })
+    Some(size)
   }
 
   /// Returns true if the map contains the index.

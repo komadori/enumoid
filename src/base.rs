@@ -1,6 +1,10 @@
 use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
+use std::cmp::Ordering;
+use std::fmt;
 use std::fmt::Debug;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::iter::Iterator;
 use std::iter::Map;
 use std::mem;
@@ -19,7 +23,6 @@ pub type EnumoidIter<T> =
   Map<<T as Enumoid>::WordRange, fn(<T as Enumoid>::Word) -> T>;
 
 /// A counter between 0 and the number of values inhabiting `T`.
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct EnumSize<T: Enumoid>(T::Word);
 
 impl<T: Enumoid> Copy for EnumSize<T> {}
@@ -30,12 +33,44 @@ impl<T: Enumoid> Clone for EnumSize<T> {
   }
 }
 
+impl<T: Enumoid> Debug for EnumSize<T> {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    f.debug_tuple("EnumSize").field(&self.0).finish()
+  }
+}
+
+impl<T: Enumoid> PartialEq for EnumSize<T> {
+  fn eq(&self, other: &Self) -> bool {
+    self.0 == other.0
+  }
+}
+
+impl<T: Enumoid> Eq for EnumSize<T> {}
+
+impl<T: Enumoid> PartialOrd for EnumSize<T> {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
+  }
+}
+
+impl<T: Enumoid> Ord for EnumSize<T> {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self.0.cmp(&other.0)
+  }
+}
+
+impl<T: Enumoid> Hash for EnumSize<T> {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    self.0.hash(state);
+  }
+}
+
 impl<T: Enumoid> EnumSize<T> {
   pub const EMPTY: EnumSize<T> = EnumSize(T::Word::ZERO);
   pub const FULL: EnumSize<T> = EnumSize(T::SIZE_WORD);
 
   #[inline]
-  pub fn from_last_value(value: T) -> Self {
+  pub fn from_last(value: T) -> Self {
     EnumSize(value.into_word().inc())
   }
 
@@ -48,6 +83,14 @@ impl<T: Enumoid> EnumSize<T> {
       T::SIZE_WORD
     );
     EnumSize(value)
+  }
+
+  pub fn from_word(sz: T::Word) -> Option<Self> {
+    if sz <= T::SIZE_WORD {
+      Some(EnumSize(sz))
+    } else {
+      None
+    }
   }
 
   pub fn from_usize(sz: usize) -> Option<Self> {
@@ -69,12 +112,17 @@ impl<T: Enumoid> EnumSize<T> {
   }
 
   #[inline]
-  pub fn into_last_value(&self) -> Option<T> {
+  pub fn into_last_index(&self) -> Option<EnumIndex<T>> {
     if self.0 > T::Word::ZERO {
-      Some(unsafe { T::from_word_unchecked(self.0.dec()) })
+      Some(unsafe { EnumIndex::from_word_unchecked(self.0.dec()) })
     } else {
       None
     }
+  }
+
+  #[inline]
+  pub fn into_last(&self) -> Option<T> {
+    self.into_last_index().map(|i| i.into_value())
   }
 
   /// Returns the next index or None.
@@ -180,6 +228,26 @@ impl<T: Enumoid> EnumSize<T> {
     value.into_word() < self.0
   }
 
+  /// Returns the next size larger or None.
+  #[inline]
+  pub fn increase(&self) -> Option<Self> {
+    if self.0 < T::SIZE_WORD {
+      Some(unsafe { EnumSize::from_word_unchecked(self.0.inc()) })
+    } else {
+      None
+    }
+  }
+
+  /// Returns the next size smaller or None.
+  #[inline]
+  pub fn decrease(&self) -> Option<Self> {
+    if self.0 > T::Word::ZERO {
+      Some(unsafe { EnumSize::from_word_unchecked(self.0.dec()) })
+    } else {
+      None
+    }
+  }
+
   #[inline]
   pub fn iter(&self) -> EnumoidIter<T> {
     T::word_range(T::Word::ZERO, self.0)
@@ -188,12 +256,7 @@ impl<T: Enumoid> EnumSize<T> {
 
   #[inline]
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
-    let w = until.into_word();
-    if w.inc() < self.0 {
-      unsafe { EnumSize::from_word_unchecked(w) }.iter()
-    } else {
-      self.iter()
-    }
+    EnumSize::from_last(until).iter()
   }
 
   #[inline]
@@ -214,7 +277,6 @@ impl<T: Enumoid> EnumSize<T> {
 }
 
 /// A counter between 0 and the highest index into the values inhabiting `T`.
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct EnumIndex<T: Enumoid>(T::Word);
 
 impl<T: Enumoid> Copy for EnumIndex<T> {}
@@ -222,6 +284,38 @@ impl<T: Enumoid> Copy for EnumIndex<T> {}
 impl<T: Enumoid> Clone for EnumIndex<T> {
   fn clone(&self) -> Self {
     *self
+  }
+}
+
+impl<T: Enumoid> Debug for EnumIndex<T> {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    f.debug_tuple("EnumIndex").field(&self.0).finish()
+  }
+}
+
+impl<T: Enumoid> PartialEq for EnumIndex<T> {
+  fn eq(&self, other: &Self) -> bool {
+    self.0 == other.0
+  }
+}
+
+impl<T: Enumoid> Eq for EnumIndex<T> {}
+
+impl<T: Enumoid> PartialOrd for EnumIndex<T> {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.cmp(other))
+  }
+}
+
+impl<T: Enumoid> Ord for EnumIndex<T> {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self.0.cmp(&other.0)
+  }
+}
+
+impl<T: Enumoid> Hash for EnumIndex<T> {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    self.0.hash(state);
   }
 }
 
@@ -361,7 +455,7 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn iter_until(until: Self) -> EnumoidIter<Self> {
-    EnumSize::from_last_value(until).iter()
+    EnumSize::from_last(until).iter()
   }
 
   #[inline]
@@ -371,7 +465,7 @@ pub trait Enumoid: Sized {
 
   #[inline]
   fn iter_from_until(from: Self, until: Self) -> EnumoidIter<Self> {
-    EnumSize::from_last_value(until).iter_from(from)
+    EnumSize::from_last(until).iter_from(from)
   }
 }
 

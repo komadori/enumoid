@@ -142,15 +142,15 @@ where
     formatter.write_str("Enumoid indexed container")
   }
 
-  fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+  fn visit_seq<S>(self, mut access: S) -> Result<Self::Value, S::Error>
   where
-    M: de::MapAccess<'de>,
+    S: de::SeqAccess<'de>,
   {
-    let mut map = EnumSet::new();
-    while let Some((key, value)) = access.next_entry::<K, bool>()? {
-      map.set(key, value);
+    let mut set = EnumSet::new();
+    while let Some(key) = access.next_element::<K>()? {
+      set.set(key, true);
     }
-    match R::try_from(map) {
+    match R::try_from(set) {
       Ok(r) => Ok(r),
       Err(_) => Err(de::Error::custom("malformed")),
     }
@@ -166,12 +166,12 @@ impl<
   where
     S: ser::Serializer,
   {
-    use ser::SerializeMap;
-    let mut map = ser.serialize_map(Some(T::SIZE))?;
-    for (k, v) in self.iter() {
-      map.serialize_entry(&k, &v)?;
+    use ser::SerializeSeq;
+    let mut set = ser.serialize_seq(Some(self.count()))?;
+    for k in self.iter() {
+      set.serialize_element(&k)?;
     }
-    map.end()
+    set.end()
   }
 }
 
@@ -185,7 +185,7 @@ impl<
   where
     D: de::Deserializer<'de>,
   {
-    de.deserialize_map(
+    de.deserialize_seq(
       SetSerdeVisitor::<T, BitsetWord, EnumSet<T, BitsetWord>>::new(),
     )
   }
