@@ -78,23 +78,58 @@ impl<
     self.get_by_index_mut(key.into())
   }
 
-  /// Sets the value associated with a given index.
+  /// Sets the value associated with a given index and returns the old value if one was present.
   #[inline]
-  pub fn set_by_index(&mut self, index: EnumIndex<T>, value: Option<V>) {
+  pub fn set_by_index(
+    &mut self,
+    index: EnumIndex<T>,
+    value: Option<V>,
+  ) -> Option<V> {
     let cell = &mut T::partial_slice_mut(&mut self.data)[index.into_usize()];
-    if self.valid.contains_index(index) {
-      unsafe { cell.assume_init_drop() };
-    }
+    let old = if self.valid.contains_index(index) {
+      Some(unsafe { cell.assume_init_read() })
+    } else {
+      None
+    };
     self.valid.set_by_index(index, value.is_some());
     if let Some(v) = value {
       cell.write(v);
     }
+    old
   }
 
-  /// Sets the value associated with a given key.
+  /// Sets the value associated with a given key and returns the old value if one was present.
   #[inline]
-  pub fn set(&mut self, key: T, value: Option<V>) {
+  pub fn set(&mut self, key: T, value: Option<V>) -> Option<V> {
     self.set_by_index(key.into(), value)
+  }
+
+  /// Adds a value at the given index to the map and returns the old value if one was present.
+  #[inline]
+  pub fn insert_by_index(
+    &mut self,
+    index: EnumIndex<T>,
+    value: V,
+  ) -> Option<V> {
+    self.set_by_index(index, Some(value))
+  }
+
+  /// Adds a value with the given key to the map and returns the old value if one was present.
+  #[inline]
+  pub fn insert(&mut self, key: T, value: V) -> Option<V> {
+    self.insert_by_index(key.into(), value)
+  }
+
+  /// Removes any value at the given index from the map and returns it if one was present.
+  #[inline]
+  pub fn remove_by_index(&mut self, index: EnumIndex<T>) -> Option<V> {
+    self.set_by_index(index, None)
+  }
+
+  /// Removes any value with the given key from the map and returns it if one was present.
+  #[inline]
+  pub fn remove(&mut self, key: T) -> Option<V> {
+    self.remove_by_index(key.into())
   }
 
   /// Clears all the elements from the map.

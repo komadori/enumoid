@@ -7,10 +7,11 @@ fn test_option_map() {
   let mut map = EnumOptionMap::<Three, u16>::new();
   assert!(map.is_empty());
   assert_eq!(map.is_vec(), EnumSize::from_usize(0));
-  map.set(Three::B, Some(200));
+  assert_eq!(map.set(Three::B, Some(200)), None);
   assert!(!map.is_empty());
   assert_eq!(map.is_vec(), None);
-  map.set(Three::A, Some(99));
+  assert_eq!(map.set(Three::A, Some(1)), None);
+  assert_eq!(map.set(Three::A, Some(99)), Some(1));
   *map.get_mut(Three::A).unwrap() += 1;
   assert!(!map.is_full());
   assert_eq!(map.is_vec(), EnumSize::from_usize(2));
