@@ -10,6 +10,7 @@ use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter;
+use std::mem;
 use std::ops::{Index, IndexMut};
 
 /// A total map from enumoid `T` to values `V`.
@@ -74,6 +75,18 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
   #[inline]
   pub fn get_mut(&mut self, key: T) -> &mut V {
     &mut self[key]
+  }
+
+  /// Sets the value associated with a given index and returns the old value.
+  #[inline]
+  pub fn set_by_index(&mut self, index: EnumIndex<T>, value: V) -> V {
+    mem::replace(self.get_by_index_mut(index), value)
+  }
+
+  /// Sets the value associated with a given key and returns the old value.
+  #[inline]
+  pub fn set(&mut self, key: T, value: V) -> V {
+    self.set_by_index(key.into(), value)
   }
 
   /// Swaps two elements in the map.
