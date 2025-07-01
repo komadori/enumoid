@@ -11,7 +11,8 @@ fn test_flags() {
   assert!(flags.any());
   assert_eq!(flags.count(), 1);
   assert!(flags.contains(Three::B));
+  flags.insert(Three::C);
   let collected: Vec<_> = flags.iter().collect();
-  assert_eq!(collected, vec![Three::B]);
-  assert_eq!(flags.iter().size_hint(), (1, Some(1)));
+  assert_eq!(collected, vec![Three::B, Three::C]);
+  assert_eq!(flags.iter().size_hint(), (2, Some(2)));
 }

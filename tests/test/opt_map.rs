@@ -20,4 +20,11 @@ fn test_option_map() {
   assert_eq!(map.get(Three::A), Some(&100));
   assert_eq!(map.get(Three::B), Some(&200));
   assert_eq!(map.get(Three::C), Some(&300));
+  map.set(Three::B, None);
+  let mut iter = map.iter_mut();
+  *iter.next().unwrap().1 -= 1;
+  *iter.next().unwrap().1 -= 1;
+  assert_eq!(iter.next(), None);
+  let collected: Vec<_> = map.iter().collect();
+  assert_eq!(collected, vec![(Three::A, &99), (Three::C, &299)]);
 }
