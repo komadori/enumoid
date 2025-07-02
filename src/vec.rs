@@ -133,25 +133,33 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     unsafe { EnumSize::from_word_unchecked(self.len) }
   }
 
+  /// Swaps two elements in the vector by index.
+  ///
+  /// # Panics
+  /// Panics if `a` or `b` are beyond the end of the vector.
+  #[inline]
+  pub fn swap_by_index(&mut self, a: EnumIndex<T>, b: EnumIndex<T>) {
+    self.as_slice_mut().swap(a.into_usize(), b.into_usize())
+  }
+
   /// Swaps two elements in the vector.
   ///
   /// # Panics
   /// Panics if `a` or `b` are beyond the end of the vector.
+  #[inline]
   pub fn swap(&mut self, a: T, b: T) {
-    self
-      .as_slice_mut()
-      .swap(T::into_word(a).as_(), T::into_word(b).as_())
+    self.swap_by_index(a.into(), b.into())
   }
 
   /// Removes an element and returns it, replacing it with the last element.
-  pub fn swap_remove(&mut self, key: T) -> Option<V> {
-    let index = T::into_word(key).as_();
-    if index < self.len.as_() {
+  pub fn swap_remove_at_index(&mut self, index: EnumIndex<T>) -> Option<V> {
+    if index.into_word() < self.len {
       let slice = T::partial_slice_mut(&mut self.data);
       self.len = self.len.dec();
+      let idx = index.into_usize();
       unsafe {
-        let value = slice[index].assume_init_read();
-        slice[index].write(slice[self.len.as_()].assume_init_read());
+        let value = slice[idx].assume_init_read();
+        slice[idx].write(slice[self.len.as_()].assume_init_read());
         Some(value)
       }
     } else {
@@ -159,15 +167,20 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     }
   }
 
-  /// Removes an element and returns it.
-  pub fn remove(&mut self, key: T) -> Option<V> {
-    let index = T::into_word(key).as_();
-    if index < self.len.as_() {
+  /// Removes an element and returns it, replacing it with the last element.
+  pub fn swap_remove(&mut self, key: T) -> Option<V> {
+    self.swap_remove_at_index(key.into())
+  }
+
+  /// Removes an element and returns it, moving the following elements down.
+  pub fn remove_at_index(&mut self, index: EnumIndex<T>) -> Option<V> {
+    if index.into_word() < self.len {
       let slice = T::partial_slice_mut(&mut self.data);
+      let idx = index.into_usize();
       let value = unsafe {
-        let value = slice[index].assume_init_read();
-        let ptr = slice.as_mut_ptr().add(index);
-        ptr::copy(ptr.add(1), ptr, self.len.as_() - index - 1);
+        let value = slice[idx].assume_init_read();
+        let ptr = slice.as_mut_ptr().add(idx);
+        ptr::copy(ptr.add(1), ptr, self.len.as_() - idx - 1);
         value
       };
       self.len = self.len.dec();
@@ -175,6 +188,11 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
     } else {
       None
     }
+  }
+
+  /// Removes an element and returns it, moving the following elements down.
+  pub fn remove(&mut self, key: T) -> Option<V> {
+    self.remove_at_index(key.into())
   }
 
   /// Clears all the elements from the vector.

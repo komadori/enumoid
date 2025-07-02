@@ -89,12 +89,16 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
     self.set_by_index(key.into(), value)
   }
 
+  /// Swaps two elements in the map by index.
+  #[inline]
+  pub fn swap_by_index(&mut self, a: EnumIndex<T>, b: EnumIndex<T>) {
+    self.as_slice_mut().swap(a.into_usize(), b.into_usize())
+  }
+
   /// Swaps two elements in the map.
   #[inline]
   pub fn swap(&mut self, a: T, b: T) {
-    self
-      .as_slice_mut()
-      .swap(T::into_word(a).as_(), T::into_word(b).as_())
+    self.swap_by_index(a.into(), b.into())
   }
 
   /// Returns an iterator over the keys and elements.
