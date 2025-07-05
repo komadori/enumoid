@@ -11,12 +11,22 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::marker;
 
-struct OptMapSerdeVisitor<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V, R> {
-  marker: marker::PhantomData<fn(EnumOptionMap<T, V>) -> R>,
+struct OptMapSerdeVisitor<
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+  R,
+> {
+  #[allow(clippy::type_complexity)]
+  marker: marker::PhantomData<fn(EnumOptionMap<T, V, BitsetWord>) -> R>,
 }
 
-impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V, R>
-  OptMapSerdeVisitor<T, V, R>
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+    R,
+  > OptMapSerdeVisitor<T, V, BitsetWord, R>
 {
   fn new() -> Self {
     OptMapSerdeVisitor {
@@ -25,11 +35,12 @@ impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V, R>
   }
 }
 
-impl<'de, K, V, R> de::Visitor<'de> for OptMapSerdeVisitor<K, V, R>
+impl<'de, K, V, BitsetWord: BitsetWordTrait, R> de::Visitor<'de>
+  for OptMapSerdeVisitor<K, V, BitsetWord, R>
 where
-  K: EnumArrayHelper<V> + EnumSetHelper<u8> + de::Deserialize<'de>,
+  K: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
   V: de::Deserialize<'de>,
-  R: TryFrom<EnumOptionMap<K, V>>,
+  R: TryFrom<EnumOptionMap<K, V, BitsetWord>>,
 {
   type Value = R;
 
@@ -49,6 +60,44 @@ where
       Ok(r) => Ok(r),
       Err(_) => Err(de::Error::custom("malformed")),
     }
+  }
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<u8> + ser::Serialize,
+    V: ser::Serialize,
+  > ser::Serialize for EnumOptionMap<T, V>
+{
+  fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+  where
+    S: ser::Serializer,
+  {
+    use ser::SerializeMap;
+    let mut map = ser.serialize_map(Some(self.count()))?;
+    for (k, v) in self.iter() {
+      map.serialize_entry(&k, v)?;
+    }
+    map.end()
+  }
+}
+
+impl<
+    'de,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
+    V: de::Deserialize<'de>,
+    BitsetWord: BitsetWordTrait,
+  > de::Deserialize<'de> for EnumOptionMap<T, V, BitsetWord>
+{
+  fn deserialize<D>(de: D) -> Result<Self, D::Error>
+  where
+    D: de::Deserializer<'de>,
+  {
+    de.deserialize_map(OptMapSerdeVisitor::<
+      T,
+      V,
+      BitsetWord,
+      EnumOptionMap<T, V, BitsetWord>,
+    >::new())
   }
 }
 
@@ -78,7 +127,7 @@ impl<
   where
     D: de::Deserializer<'de>,
   {
-    de.deserialize_map(OptMapSerdeVisitor::<T, V, EnumMap<T, V>>::new())
+    de.deserialize_map(OptMapSerdeVisitor::<T, V, u8, EnumMap<T, V>>::new())
   }
 }
 
@@ -108,7 +157,7 @@ impl<
   where
     D: de::Deserializer<'de>,
   {
-    de.deserialize_map(OptMapSerdeVisitor::<T, V, EnumVec<T, V>>::new())
+    de.deserialize_map(OptMapSerdeVisitor::<T, V, u8, EnumVec<T, V>>::new())
   }
 }
 
