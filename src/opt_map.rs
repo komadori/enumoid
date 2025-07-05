@@ -6,6 +6,8 @@ use crate::set::EnumSetIndexIter;
 use crate::sub_base::BitsetWordTrait;
 use crate::EnumIndex;
 use core::slice;
+use std::fmt;
+use std::fmt::Debug;
 use std::hash::Hash;
 use std::mem;
 use std::mem::MaybeUninit;
@@ -217,6 +219,17 @@ impl<
   pub(crate) fn into_partial(mut self) -> T::PartialArray {
     self.valid.clear();
     mem::replace(&mut self.data, T::new_partial())
+  }
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + Debug,
+    V: Debug,
+    BitsetWord: BitsetWordTrait,
+  > Debug for EnumOptionMap<T, V, BitsetWord>
+{
+  fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fmt.debug_map().entries(self.iter()).finish()
   }
 }
 
