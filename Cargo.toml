@@ -20,3 +20,7 @@ serde = { version = "1.0", default-features = false, optional = true }
 
 [workspace]
 members = ["enumoid_derive"]
+
+[dev-dependencies]
+ron = "0.10.1"
+serde = { version = "1.0", default-features = false, features = ["derive"] }

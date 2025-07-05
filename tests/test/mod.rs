@@ -1,6 +1,8 @@
 pub mod map;
 pub mod opt_map;
 pub mod order;
+#[cfg(feature = "serde")]
+pub mod serde;
 pub mod set;
 pub mod sizes;
 pub mod types;

@@ -1,6 +1,7 @@
 use enumoid::Enumoid;
 
 #[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Three {
   A,
   B,
