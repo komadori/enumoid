@@ -29,6 +29,21 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
     }
   }
 
+  /// Creates a new set with all members set to true.
+  pub fn new_all() -> Self {
+    let mut data = T::DEFAULT_BITSET;
+    let slice = T::slice_bitset_mut(&mut data);
+    for (i, word) in slice.iter_mut().enumerate() {
+      if i < T::SIZE / T::BITSET_WORD_BITS {
+        *word = T::BitsetWord::ALL_SET;
+      } else {
+        *word = T::BitsetWord::ALL_SET
+          >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
+      }
+    }
+    EnumSet { data }
+  }
+
   /// Sets whether a member index is in the set.
   #[inline]
   pub fn set_by_index(&mut self, index: EnumIndex<T>, flag: bool) {
