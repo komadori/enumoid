@@ -261,11 +261,6 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   }
 }
 
-impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
-  ExactSizeIterator for EnumSetIndexIter<'a, T, BitsetWord>
-{
-}
-
 pub struct EnumSetIter<
   'a,
   T: EnumSetHelper<BitsetWord>,
@@ -288,9 +283,4 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   fn size_hint(&self) -> (usize, Option<usize>) {
     self.iter.size_hint()
   }
-}
-
-impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
-  ExactSizeIterator for EnumSetIter<'a, T, BitsetWord>
-{
 }

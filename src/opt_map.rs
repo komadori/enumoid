@@ -319,15 +319,10 @@ impl<
     };
     Some((index.into_value(), value))
   }
-}
 
-impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > ExactSizeIterator for EnumOptionMapIter<'a, T, V, BitsetWord>
-{
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    self.iter.size_hint()
+  }
 }
 
 pub struct EnumOptionMapIterMut<
@@ -356,13 +351,8 @@ impl<
     self.prev = index.into_usize() + 1;
     Some((index.into_value(), unsafe { value.assume_init_mut() }))
   }
-}
 
-impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > ExactSizeIterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
-{
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    self.iter.size_hint()
+  }
 }
