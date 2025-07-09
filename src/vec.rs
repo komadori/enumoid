@@ -344,6 +344,18 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator for &'a EnumVec<T, V> {
   }
 }
 
+impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator
+  for &'a mut EnumVec<T, V>
+{
+  type Item = (T, &'a mut V);
+  type IntoIter = EnumSliceIterMut<'a, T, V>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter_mut()
+  }
+}
+
 impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V> TryFrom<EnumOptionMap<T, V>>
   for EnumVec<T, V>
 {
