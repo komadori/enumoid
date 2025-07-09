@@ -222,10 +222,11 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
   pub fn new(flags: &'a EnumSet<T, BitsetWord>) -> Self {
     let slice = T::slice_bitset(&flags.data);
     let current = slice.first().copied().unwrap_or(T::BitsetWord::ZERO);
+    let word_index = if current == T::BitsetWord::ZERO { 1 } else { 0 };
     Self {
       flags,
       current,
-      word_index: 0,
+      word_index,
     }
   }
 }
@@ -236,6 +237,9 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   type Item = EnumIndex<T>;
 
   fn next(&mut self) -> Option<Self::Item> {
+    if self.word_index >= T::BITSET_WORDS {
+      return None;
+    }
     let slice = T::slice_bitset(&self.flags.data);
     while self.current == T::BitsetWord::ZERO {
       self.word_index += 1;
