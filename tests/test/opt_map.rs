@@ -430,7 +430,9 @@ fn test_mutable_get() {
   // Insert a value and test get_mut
   map.insert(Three::A, 100);
 
-  let value_mut = map.get_mut(Three::A).unwrap();
+  let value_mut = map
+    .get_mut(Three::A)
+    .expect("Expected get_mut to return Some for existing key");
   *value_mut += 50;
 
   assert_eq!(
@@ -440,7 +442,9 @@ fn test_mutable_get() {
   );
 
   // Test get_by_index_mut
-  let value_mut = map.get_by_index_mut(Three::A.into()).unwrap();
+  let value_mut = map
+    .get_by_index_mut(Three::A.into())
+    .expect("Expected get_by_index_mut to return Some for existing key");
   *value_mut *= 2;
 
   assert_eq!(

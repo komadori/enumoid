@@ -38,7 +38,7 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   {
     let mut vec = Self::new();
     for key in size.iter() {
-      vec.push(f(key));
+      let _ = vec.try_push(f(key));
     }
     vec
   }
@@ -206,14 +206,15 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
   }
 
   /// Adds an element to the end of the vector.
-  ///
-  /// # Panics
-  /// Panics if the vector is already full.
-  pub fn push(&mut self, value: V) {
+  pub fn try_push(&mut self, value: V) -> Result<(), V> {
     let len = self.len.as_();
+    if len >= T::SIZE {
+      return Err(value);
+    }
     T::partial_slice_mut(&mut self.data)[len] =
       mem::MaybeUninit::<V>::new(value);
     self.len = self.len.inc();
+    Ok(())
   }
 
   /// Removes an element from the end of the vector and returns it,
@@ -271,8 +272,8 @@ impl<T: EnumArrayHelper<V>, V> Drop for EnumVec<T, V> {
 impl<T: EnumArrayHelper<V>, V: Clone> Clone for EnumVec<T, V> {
   fn clone(&self) -> Self {
     let mut clone = Self::new();
-    for (_, value) in self.iter() {
-      clone.push(value.clone())
+    for value in self.as_slice() {
+      let _ = clone.try_push(value.clone());
     }
     clone
   }
@@ -328,7 +329,9 @@ impl<T: EnumArrayHelper<V>, V> iter::FromIterator<V> for EnumVec<T, V> {
   fn from_iter<I: iter::IntoIterator<Item = V>>(iter: I) -> Self {
     let mut c = EnumVec::<T, V>::new();
     for i in iter {
-      c.push(i);
+      if c.try_push(i).is_err() {
+        break;
+      }
     }
     c
   }

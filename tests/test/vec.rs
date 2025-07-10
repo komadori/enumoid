@@ -92,7 +92,9 @@ fn test_push_pop() {
   );
 
   // Test push and indexing
-  vec.push(100);
+  vec
+    .try_push(100)
+    .expect("Failed to push first element to empty vec");
   assert!(!vec.is_empty(), "Expected vec to not be empty after push");
   assert!(!vec.is_full(), "Expected vec to not be full after one push");
   assert_eq!(
@@ -106,7 +108,9 @@ fn test_push_pop() {
     "Expected size to reflect one element"
   );
 
-  vec.push(200);
+  vec
+    .try_push(200)
+    .expect("Failed to push second element to vec");
   assert_eq!(
     vec[Three::A],
     100,
@@ -123,7 +127,9 @@ fn test_push_pop() {
     "Expected size to reflect two elements"
   );
 
-  vec.push(300);
+  vec
+    .try_push(300)
+    .expect("Failed to push third element to vec");
   assert!(
     vec.is_full(),
     "Expected vec to be full after pushing all elements"
@@ -220,9 +226,7 @@ fn test_new_with_constructor() {
 
 #[test]
 fn test_get_methods() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(42);
-  vec.push(84);
+  let mut vec: EnumVec<Three, i32> = [42, 84].into_iter().collect();
 
   // Test get and get_by_index for valid indices
   assert_eq!(
@@ -258,14 +262,19 @@ fn test_get_methods() {
   );
 
   // Test mutable get methods
-  *vec.get_mut(Three::A).unwrap() = 100;
+  *vec
+    .get_mut(Three::A)
+    .expect("Expected get_mut to return Some for existing element") = 100;
   assert_eq!(
     vec[Three::A],
     100,
     "Expected value to be modified through get_mut()"
   );
 
-  *vec.get_by_index_mut(Three::B.into()).unwrap() = 200;
+  *vec
+    .get_by_index_mut(Three::B.into())
+    .expect("Expected get_by_index_mut to return Some for existing element") =
+    200;
   assert_eq!(
     vec[Three::B],
     200,
@@ -287,7 +296,7 @@ fn test_get_methods() {
 
 #[test]
 fn test_contains() {
-  let mut vec = EnumVec::<Three, i32>::new();
+  let vec = EnumVec::<Three, i32>::new();
 
   // Test contains on empty vec
   assert!(
@@ -304,48 +313,54 @@ fn test_contains() {
   );
 
   // Add elements and test contains
-  vec.push(10);
-  assert!(vec.contains(Three::A), "Expected vec to contain Three::A");
+  let mut vec_with_one: EnumVec<Three, i32> = [10].into_iter().collect();
   assert!(
-    !vec.contains(Three::B),
+    vec_with_one.contains(Three::A),
+    "Expected vec to contain Three::A"
+  );
+  assert!(
+    !vec_with_one.contains(Three::B),
     "Expected vec to not contain Three::B"
   );
   assert!(
-    !vec.contains(Three::C),
+    !vec_with_one.contains(Three::C),
     "Expected vec to not contain Three::C"
   );
 
-  vec.push(20);
-  assert!(vec.contains(Three::A), "Expected vec to contain Three::A");
-  assert!(vec.contains(Three::B), "Expected vec to contain Three::B");
+  vec_with_one
+    .try_push(20)
+    .expect("Failed to push second element in contains test");
   assert!(
-    !vec.contains(Three::C),
+    vec_with_one.contains(Three::A),
+    "Expected vec to contain Three::A"
+  );
+  assert!(
+    vec_with_one.contains(Three::B),
+    "Expected vec to contain Three::B"
+  );
+  assert!(
+    !vec_with_one.contains(Three::C),
     "Expected vec to not contain Three::C"
   );
 
   // Test contains_index
   assert!(
-    vec.contains_index(Three::A.into()),
+    vec_with_one.contains_index(Three::A.into()),
     "Expected vec to contain index A"
   );
   assert!(
-    vec.contains_index(Three::B.into()),
+    vec_with_one.contains_index(Three::B.into()),
     "Expected vec to contain index B"
   );
   assert!(
-    !vec.contains_index(Three::C.into()),
+    !vec_with_one.contains_index(Three::C.into()),
     "Expected vec to not contain index C"
   );
 }
 
 #[test]
 fn test_clear() {
-  let mut vec = EnumVec::<Three, i32>::new();
-
-  // Add some elements
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let mut vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   assert!(vec.is_full(), "Expected vec to be full before clear");
   assert_eq!(
@@ -380,7 +395,9 @@ fn test_clear() {
   );
 
   // Test that we can push again after clear
-  vec.push(100);
+  vec
+    .try_push(100)
+    .expect("Failed to push element after clear");
   assert_eq!(
     vec[Three::A],
     100,
@@ -395,10 +412,7 @@ fn test_clear() {
 
 #[test]
 fn test_remove_at_index() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let mut vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   // Test remove_at_index returns value for valid index
   let removed = vec.remove_at_index(Three::B.into());
@@ -445,10 +459,7 @@ fn test_remove_at_index() {
 
 #[test]
 fn test_swap_remove_at_index() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let mut vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   // Test swap_remove_at_index returns value and replaces with last element
   let removed = vec.swap_remove_at_index(Three::A.into());
@@ -495,9 +506,7 @@ fn test_swap_remove_at_index() {
 
 #[test]
 fn test_slice_access() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
+  let mut vec: EnumVec<Three, i32> = [10, 20].into_iter().collect();
 
   // Test as_slice
   let slice = vec.as_slice();
@@ -526,15 +535,14 @@ fn test_slice_access() {
 
 #[test]
 fn test_iteration_elements_in_order() {
-  let mut vec = EnumVec::<Three, i32>::new();
+  let vec = EnumVec::<Three, i32>::new();
 
   // Test iteration on empty vec
   let collected: Vec<_> = vec.iter().collect();
   assert_eq!(collected, vec![], "Expected empty iteration for empty vec");
 
   // Add elements and test iteration
-  vec.push(10);
-  vec.push(20);
+  let mut vec: EnumVec<Three, i32> = [10, 20].into_iter().collect();
 
   let collected: Vec<_> = vec.iter().collect();
   assert_eq!(
@@ -558,10 +566,7 @@ fn test_iteration_elements_in_order() {
 
 #[test]
 fn test_iterator_exact_size_and_double_ended() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   let mut iter = vec.iter();
 
@@ -623,10 +628,7 @@ fn test_iterator_exact_size_and_double_ended() {
 
 #[test]
 fn test_into_iterator() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let mut vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   // Test IntoIterator for &EnumVec
   let collected: Vec<_> = (&vec).into_iter().collect();
@@ -706,10 +708,7 @@ fn test_from_iterator() {
 
 #[test]
 fn test_iterator_partial_consumption() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(10);
-  vec.push(20);
-  vec.push(30);
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
   let mut iter = vec.iter();
 
@@ -728,8 +727,7 @@ fn test_iterator_partial_consumption() {
 
 #[test]
 fn test_iterator_single_element() {
-  let mut vec = EnumVec::<Three, i32>::new();
-  vec.push(42);
+  let vec: EnumVec<Three, i32> = [42].into_iter().collect();
 
   let collected: Vec<_> = vec.iter().collect();
   assert_eq!(
@@ -776,13 +774,19 @@ fn test_remove() {
 }
 
 #[test]
-#[should_panic(expected = "index out of bounds")]
-fn test_push_when_full_panics() {
+fn test_push() {
   let mut vec = EnumVec::<Three, u16>::new();
-  vec.push(100);
-  vec.push(200);
-  vec.push(300);
-  vec.push(400);
+  vec
+    .try_push(100)
+    .expect("Failed to push first element in push test");
+  vec
+    .try_push(200)
+    .expect("Failed to push second element in push test");
+  vec
+    .try_push(300)
+    .expect("Failed to push third element in push test");
+  let overflow = vec.try_push(400);
+  assert_eq!(overflow, Err(400), "Expected overflow to return the value");
 }
 
 #[test]

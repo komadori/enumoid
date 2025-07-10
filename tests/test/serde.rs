@@ -73,19 +73,20 @@ fn test_enum_option_map_empty_round_trip() {
 
 #[test]
 fn test_enum_vec_round_trip() {
-  let mut vec = EnumVec::new();
-  vec.push(TestData {
-    value: 10,
-    name: "first".to_string(),
-  });
-  vec.push(TestData {
-    value: 20,
-    name: "second".to_string(),
-  });
-  vec.push(TestData {
-    value: 30,
-    name: "third".to_string(),
-  });
+  let vec = EnumVec::from_iter([
+    TestData {
+      value: 10,
+      name: "first".to_string(),
+    },
+    TestData {
+      value: 20,
+      name: "second".to_string(),
+    },
+    TestData {
+      value: 30,
+      name: "third".to_string(),
+    },
+  ]);
 
   let ron_str = ron::to_string(&vec).expect("Serialization failed");
   let deserialized: EnumVec<Three, TestData> =
