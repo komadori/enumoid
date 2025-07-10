@@ -134,6 +134,31 @@ impl<
     self.remove_by_index(key.into())
   }
 
+  /// Swaps two elements in the map by index.
+  #[inline]
+  pub fn swap_by_index(&mut self, a: EnumIndex<T>, b: EnumIndex<T>) {
+    let valid_a = self.valid.contains_index(a);
+    let valid_b = self.valid.contains_index(b);
+    let slice = T::partial_slice_mut(&mut self.data);
+    if valid_a && valid_b {
+      slice.swap(a.into_usize(), b.into_usize());
+    } else if valid_a || valid_b {
+      self.valid.set_by_index(b, !valid_a);
+      self.valid.set_by_index(a, !valid_b);
+      let (src, dst) = if valid_a { (a, b) } else { (b, a) };
+      unsafe {
+        slice[dst.into_usize()]
+          .write(slice[src.into_usize()].assume_init_read());
+      }
+    }
+  }
+
+  /// Swaps two elements in the map.
+  #[inline]
+  pub fn swap(&mut self, a: T, b: T) {
+    self.swap_by_index(a.into(), b.into());
+  }
+
   /// Clears all the elements from the map.
   pub fn clear(&mut self) {
     let data = T::partial_slice_mut(&mut self.data);
