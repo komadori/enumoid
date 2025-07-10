@@ -160,7 +160,7 @@ fn try_derive_enumoid(
 ) -> Result<proc_macro2::TokenStream> {
   let input: syn::DeriveInput = syn::parse(input).unwrap();
   let word_type = get_index_type(&input)?;
-  let word_type_error = format!("Index type '{}' is too narrow.", word_type);
+  let word_type_error = format!("Index type '{word_type}' is too narrow.");
   let bitset_word_types = get_bitset_word_types(&input)?;
   let name = input.ident;
   let rules = if let syn::Data::Enum(data_enum) = input.data {
