@@ -103,7 +103,7 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
 
   /// Returns an iterator over the keys and elements.
   #[inline]
-  pub fn iter(&self) -> EnumSliceIter<T, V> {
+  pub fn iter(&self) -> EnumSliceIter<'_, T, V> {
     EnumSliceIter {
       _phantom: Default::default(),
       word: T::Word::ZERO,
@@ -113,7 +113,7 @@ impl<T: EnumArrayHelper<V>, V> EnumMap<T, V> {
 
   /// Returns a mutable iterator over the keys and elements.
   #[inline]
-  pub fn iter_mut(&mut self) -> EnumSliceIterMut<T, V> {
+  pub fn iter_mut(&mut self) -> EnumSliceIterMut<'_, T, V> {
     EnumSliceIterMut {
       _phantom: Default::default(),
       word: T::Word::ZERO,

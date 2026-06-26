@@ -212,7 +212,7 @@ impl<
 
   /// Returns an iterator over the keys and values.
   #[inline]
-  pub fn iter(&self) -> EnumOptionMapIter<T, V, BitsetWord> {
+  pub fn iter(&self) -> EnumOptionMapIter<'_, T, V, BitsetWord> {
     EnumOptionMapIter {
       iter: self.valid.iter_index(),
       data: &self.data,
@@ -221,7 +221,7 @@ impl<
 
   /// Returns a mutable iterator over the keys and values.
   #[inline]
-  pub fn iter_mut(&mut self) -> EnumOptionMapIterMut<T, V, BitsetWord> {
+  pub fn iter_mut(&mut self) -> EnumOptionMapIterMut<'_, T, V, BitsetWord> {
     EnumOptionMapIterMut {
       iter: self.valid.iter_index(),
       data: T::partial_slice_mut(&mut self.data).iter_mut(),

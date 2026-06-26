@@ -114,13 +114,13 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Returns an iterator over the indices of the members of the set.
   #[inline]
-  pub fn iter_index(&self) -> EnumSetIndexIter<T, BitsetWord> {
+  pub fn iter_index(&self) -> EnumSetIndexIter<'_, T, BitsetWord> {
     EnumSetIndexIter::new(self)
   }
 
   /// Returns an iterator over the members of the set.
   #[inline]
-  pub fn iter(&self) -> EnumSetIter<T, BitsetWord> {
+  pub fn iter(&self) -> EnumSetIter<'_, T, BitsetWord> {
     EnumSetIter {
       iter: self.iter_index(),
     }
