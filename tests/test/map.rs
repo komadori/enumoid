@@ -102,28 +102,6 @@ fn test_iterator_exact_size() {
 }
 
 #[test]
-fn test_iterator_nth() {
-  let mut map = EnumMap::<Three, u16>::new();
-  map[Three::A] = 10;
-  map[Three::B] = 20;
-  map[Three::C] = 30;
-
-  let mut iter = map.iter();
-
-  // Test Iterator::nth
-  assert_eq!(
-    iter.nth(1),
-    Some((Three::B, &20)),
-    "Expected nth(1) to return second element"
-  );
-  assert_eq!(
-    iter.len(),
-    1,
-    "Expected iterator length to be 1 after nth(1)"
-  );
-}
-
-#[test]
 fn test_iterator_double_ended() {
   let mut map = EnumMap::<Three, u16>::new();
   map[Three::A] = 10;

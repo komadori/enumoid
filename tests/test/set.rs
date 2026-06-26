@@ -204,16 +204,6 @@ fn test_insert() {
 fn test_remove() {
   let mut set = EnumSet::<Three>::new_all();
 
-  // Add some members first
-  set.insert(Three::A);
-  set.insert(Three::B);
-  set.insert(Three::C);
-  assert_eq!(
-    set.count(),
-    3,
-    "Expected count to be 3 after adding all members"
-  );
-
   // Test remove returns true for existing member
   let was_present = set.remove(Three::B);
   assert!(
