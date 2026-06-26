@@ -143,8 +143,8 @@ impl<
     if valid_a && valid_b {
       slice.swap(a.into_usize(), b.into_usize());
     } else if valid_a || valid_b {
-      self.valid.set_by_index(b, !valid_a);
-      self.valid.set_by_index(a, !valid_b);
+      self.valid.set_by_index(b, valid_a);
+      self.valid.set_by_index(a, valid_b);
       let (src, dst) = if valid_a { (a, b) } else { (b, a) };
       unsafe {
         slice[dst.into_usize()]

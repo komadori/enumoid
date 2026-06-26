@@ -616,20 +616,20 @@ fn test_swap_by_index_present_with_present() {
 fn test_swap_present_with_absent() {
   let mut map = EnumOptionMap::<Three, i32>::new();
 
-  // Test swap with one value present, one absent
-  // Based on the implementation, swapping present with absent does nothing
+  // Test swap with one value present, one absent: the value moves into the
+  // previously-absent slot, leaving the source slot empty.
   map.insert(Three::A, 100);
 
   map.swap(Three::A, Three::B);
   assert_eq!(
     map.get(Three::A),
-    Some(&100),
-    "Expected Three::A to remain unchanged after swap with absent value"
+    None,
+    "Expected Three::A to become absent after swapping into an empty slot"
   );
   assert_eq!(
     map.get(Three::B),
-    None,
-    "Expected Three::B to remain None after swap with present value"
+    Some(&100),
+    "Expected Three::B to receive the value after swap"
   );
   assert_eq!(map.count(), 1, "Expected count to remain 1 after swap");
 }
@@ -638,19 +638,20 @@ fn test_swap_present_with_absent() {
 fn test_swap_by_index_present_with_absent() {
   let mut map = EnumOptionMap::<Three, i32>::new();
 
-  // Test swap_by_index with one present, one absent
+  // Test swap_by_index with one present, one absent: the value moves into the
+  // previously-absent slot, leaving the source slot empty.
   map.insert(Three::C, 200);
 
   map.swap_by_index(Three::C.into(), Three::A.into());
   assert_eq!(
     map.get(Three::C),
-    Some(&200),
-    "Expected Three::C to remain unchanged after swap_by_index with absent value"
+    None,
+    "Expected Three::C to become absent after swapping into an empty slot"
   );
   assert_eq!(
     map.get(Three::A),
-    None,
-    "Expected Three::A to remain None after swap_by_index with present value"
+    Some(&200),
+    "Expected Three::A to receive the value after swap_by_index"
   );
   assert_eq!(
     map.count(),
