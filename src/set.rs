@@ -221,8 +221,12 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 {
   pub fn new(flags: &'a EnumSet<T, BitsetWord>) -> Self {
     let slice = T::slice_bitset(&flags.data);
-    let current = slice.first().copied().unwrap_or(T::BitsetWord::ZERO);
-    let word_index = if current == T::BitsetWord::ZERO { 1 } else { 0 };
+    let (current, word_index) = if let Some(first_word) = slice.first().copied()
+    {
+      (first_word, 0)
+    } else {
+      (T::BitsetWord::ZERO, 1)
+    };
     Self {
       flags,
       current,
@@ -253,12 +257,10 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
 
   fn size_hint(&self) -> (usize, Option<usize>) {
     let current_count = self.current.count_ones();
-    let eff_word_index =
-      self.word_index + if current_count > 0 { 1 } else { 0 };
     (
       current_count,
       Some(
-        T::SIZE.saturating_sub(eff_word_index * T::BITSET_WORD_BITS)
+        T::SIZE.saturating_sub((self.word_index + 1) * T::BITSET_WORD_BITS)
           + current_count,
       ),
     )

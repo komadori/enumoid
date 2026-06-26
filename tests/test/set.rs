@@ -578,6 +578,26 @@ fn test_iterator_full_set() {
 }
 
 #[test]
+fn test_iter_members() {
+  for value in [Seventeen::A, Seventeen::I, Seventeen::Q] {
+    let mut set = EnumSet::<Seventeen>::new();
+    set.insert(value);
+
+    assert_eq!(set.count(), 1, "Expected count to be 1 for {value:?}");
+    assert_eq!(
+      set.iter().collect::<Vec<_>>(),
+      vec![value],
+      "Expected iter() to yield {value:?}"
+    );
+    assert_eq!(
+      set.iter_index().collect::<Vec<_>>(),
+      vec![value.into()],
+      "Expected iter_index() to yield the index of {value:?}"
+    );
+  }
+}
+
+#[test]
 fn test_empty_size_hint() {
   let empty_set = EnumSet::<Seventeen>::new();
   assert_eq!(
