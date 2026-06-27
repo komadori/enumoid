@@ -267,8 +267,8 @@ impl<T: Enumoid> EnumSize<T> {
 
   #[inline]
   pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
-    let w = until.into_word();
-    if w.inc() < self.0 {
+    let w = until.into_word().inc();
+    if w < self.0 {
       unsafe { EnumSize::from_word_unchecked(w) }.iter_from(from)
     } else {
       self.iter_from(from)

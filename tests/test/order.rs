@@ -2,7 +2,7 @@ use crate::test::types::{
   CompoundSeven, Seventeen, Sixteen, StructOne, StructThree, Three,
   ThreeHundred, WideThree,
 };
-use enumoid::{EnumIndex, Enumoid};
+use enumoid::{EnumIndex, EnumSize, Enumoid};
 use std::{fmt::Debug, iter::zip};
 
 use super::types::{CompoundOnWideSeven, CompoundWideOnSeven};
@@ -29,6 +29,47 @@ fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &[T]) {
     } else {
       assert_eq!(x.next(), Some(values[i + 1]));
       assert_eq!(x.next_wrapped(), values[i + 1]);
+    }
+  }
+
+  // Test iterators
+  let full_size = EnumSize::<T>::FULL;
+  for (i, &from) in values.iter().enumerate() {
+    for (j, &until) in values.iter().enumerate() {
+      let expected: Vec<T> = if i <= j {
+        values[i..=j].to_vec()
+      } else {
+        Vec::new()
+      };
+      assert_eq!(
+        T::iter_from_until(from, until).collect::<Vec<_>>(),
+        expected,
+        "Enumoid::iter_from_until({:?}, {:?})",
+        from,
+        until
+      );
+      assert_eq!(
+        full_size.iter_from_until(from, until).collect::<Vec<_>>(),
+        expected,
+        "EnumSize::iter_from_until({:?}, {:?})",
+        from,
+        until
+      );
+      let size_until = EnumSize::<T>::from_last(until);
+      assert_eq!(
+        size_until.iter_from(from).collect::<Vec<_>>(),
+        expected,
+        "EnumSize(size_until)::iter_from({:?}, {:?})",
+        from,
+        until
+      );
+      assert_eq!(
+        size_until.iter_from_until(from, until).collect::<Vec<_>>(),
+        expected,
+        "EnumSize(size_until)::iter_from_until({:?}, {:?})",
+        from,
+        until
+      );
     }
   }
 }
