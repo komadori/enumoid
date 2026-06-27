@@ -1,5 +1,6 @@
-use crate::test::types::{Seventeen, Three};
+use crate::test::types::{Seventeen, Sixteen, Three};
 use enumoid::EnumSet;
+use enumoid::Enumoid;
 
 #[test]
 fn test_empty_state() {
@@ -324,6 +325,28 @@ fn test_all_state() {
 
   // Remove one member
   set.remove(Three::B);
+  assert!(
+    !set.all(),
+    "Expected set to not have all members after removing one member"
+  );
+}
+
+#[test]
+fn test_all_state_word_multiple() {
+  let mut set = EnumSet::<Sixteen>::new();
+  assert!(!set.all(), "Expected empty set to not have all members");
+
+  for value in Sixteen::iter() {
+    set.insert(value);
+  }
+  assert!(set.all(), "Expected set to have all members once filled");
+
+  assert!(
+    EnumSet::<Sixteen>::new_all().all(),
+    "Expected new_all set to have all members"
+  );
+
+  set.remove(Sixteen::H);
   assert!(
     !set.all(),
     "Expected set to not have all members after removing one member"

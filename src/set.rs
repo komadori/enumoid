@@ -141,13 +141,15 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
   /// Returns true if all possible members are in the set.
   pub fn all(&self) -> bool {
     let slice = T::slice_bitset(&self.data);
-    let last = T::BitsetWord::ALL_SET
-      >> (T::BITSET_WORD_BITS - T::SIZE % T::BITSET_WORD_BITS);
-    slice[..T::SIZE / T::BITSET_WORD_BITS]
+    let full_words = T::SIZE / T::BITSET_WORD_BITS;
+    let rem = T::SIZE % T::BITSET_WORD_BITS;
+    slice[..full_words]
       .iter()
       .all(|&val| val == T::BitsetWord::ALL_SET)
-      && (T::SIZE % T::BITSET_WORD_BITS == 0
-        || slice[T::SIZE / T::BITSET_WORD_BITS] == last)
+      && (rem == 0 || {
+        let last = T::BitsetWord::ALL_SET >> (T::BITSET_WORD_BITS - rem);
+        slice[full_words] == last
+      })
   }
 }
 
