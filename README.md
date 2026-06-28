@@ -11,7 +11,7 @@ enumoid = "0.4"
 ```
 
 ## Deriving Enumoid
-In order to use a type with this crate, it must implement the Enumoid trate using the eponymous derive proc macro.
+In order to use a type with this crate, it must implement the Enumoid trait using the eponymous derive proc macro.
 
 Enumoid can be derived for enum types with unit variants:
 
