@@ -159,7 +159,9 @@ impl<T: EnumArrayHelper<V>, V> EnumVec<T, V> {
       let idx = index.into_usize();
       unsafe {
         let value = slice[idx].assume_init_read();
-        slice[idx].write(slice[self.len.as_()].assume_init_read());
+        if idx != self.len.as_() {
+          slice[idx].write(slice[self.len.as_()].assume_init_read());
+        }
         Some(value)
       }
     } else {
