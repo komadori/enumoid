@@ -22,5 +22,5 @@ serde = { version = "1.0", default-features = false, optional = true }
 members = ["enumoid_derive"]
 
 [dev-dependencies]
-ron = "0.10.1"
+ron = "0.12.2"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
