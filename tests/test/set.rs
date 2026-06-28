@@ -762,3 +762,93 @@ fn test_set_by_index() {
     "Expected count to be 2 after setting two indices"
   );
 }
+
+#[test]
+fn test_from_iterator() {
+  // Collecting keys inserts each member into the set.
+  let set: EnumSet<Three> = [Three::A, Three::C].into_iter().collect();
+
+  assert!(set.contains(Three::A), "Expected set to contain A");
+  assert!(!set.contains(Three::B), "Expected set to not contain B");
+  assert!(set.contains(Three::C), "Expected set to contain C");
+  assert_eq!(set.count(), 2, "Expected count to be 2 after collecting");
+}
+
+#[test]
+fn test_from_iterator_duplicates() {
+  // Duplicate keys are idempotent and don't inflate the count.
+  let set: EnumSet<Three> =
+    [Three::B, Three::B, Three::B].into_iter().collect();
+
+  assert!(set.contains(Three::B), "Expected set to contain B");
+  assert_eq!(
+    set.count(),
+    1,
+    "Expected count to be 1 despite duplicate keys"
+  );
+}
+
+#[test]
+fn test_from_iterator_empty() {
+  // An empty iterator yields an empty set.
+  let set: EnumSet<Three> = std::iter::empty().collect();
+
+  assert!(!set.any(), "Expected empty set from empty iterator");
+  assert_eq!(set.count(), 0, "Expected count of 0 from empty iterator");
+}
+
+#[test]
+fn test_into_iterator_owned() {
+  // The consuming IntoIterator yields owned members, mirroring FromIterator<T>.
+  let set: EnumSet<Three> = [Three::A, Three::C].into_iter().collect();
+  let collected: Vec<Three> = set.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![Three::A, Three::C],
+    "Expected consuming iteration to yield members in order"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_roundtrips() {
+  let set: EnumSet<Three> = [Three::A, Three::B].into_iter().collect();
+  let roundtripped: EnumSet<Three> = set.into_iter().collect();
+  let expected: EnumSet<Three> = [Three::A, Three::B].into_iter().collect();
+  assert_eq!(
+    roundtripped, expected,
+    "Expected into_iter().collect() to round-trip"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_empty() {
+  let set = EnumSet::<Three>::new();
+  let collected: Vec<Three> = set.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![],
+    "Expected empty consuming iteration for empty set"
+  );
+}
+
+#[test]
+fn test_into_iterator_by_ref() {
+  // IntoIterator for &EnumSet enables for-loop syntax without consuming.
+  let set: EnumSet<Three> = [Three::A, Three::C].into_iter().collect();
+
+  let mut collected = Vec::new();
+  for member in &set {
+    collected.push(member);
+  }
+  assert_eq!(
+    collected,
+    vec![Three::A, Three::C],
+    "Expected &EnumSet iteration to yield members"
+  );
+
+  // The set is still usable afterwards.
+  assert!(
+    set.contains(Three::A),
+    "Expected set to be intact after &iter"
+  );
+}

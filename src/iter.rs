@@ -1,5 +1,6 @@
 use crate::base::Enumoid;
 use crate::sub_base::RawSizeWord;
+use std::iter::FusedIterator;
 use std::marker;
 use std::slice;
 
@@ -38,6 +39,8 @@ impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIter<'a, T, V> {
   }
 }
 
+impl<'a, T: Enumoid, V> FusedIterator for EnumSliceIter<'a, T, V> {}
+
 pub struct EnumSliceIterMut<'a, T: Enumoid, V: 'a> {
   pub(crate) _phantom: marker::PhantomData<T>,
   pub(crate) word: T::Word,
@@ -73,3 +76,5 @@ impl<'a, T: Enumoid, V> DoubleEndedIterator for EnumSliceIterMut<'a, T, V> {
     Some((key, value))
   }
 }
+
+impl<'a, T: Enumoid, V> FusedIterator for EnumSliceIterMut<'a, T, V> {}

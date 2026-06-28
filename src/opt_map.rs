@@ -9,6 +9,7 @@ use core::slice;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::iter;
 use std::mem;
 use std::mem::MaybeUninit;
 
@@ -318,13 +319,140 @@ impl<
   }
 }
 
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::FromIterator<(T, V)> for EnumOptionMap<T, V, BitsetWord>
+{
+  fn from_iter<I: iter::IntoIterator<Item = (T, V)>>(iter: I) -> Self {
+    let mut map = EnumOptionMap::<T, V, BitsetWord>::new();
+    for (key, value) in iter {
+      map.insert(key, value);
+    }
+    map
+  }
+}
+
+impl<
+    'a,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::IntoIterator for &'a EnumOptionMap<T, V, BitsetWord>
+{
+  type Item = (T, &'a V);
+  type IntoIter = EnumOptionMapIter<'a, T, V, BitsetWord>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter()
+  }
+}
+
+impl<
+    'a,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::IntoIterator for &'a mut EnumOptionMap<T, V, BitsetWord>
+{
+  type Item = (T, &'a mut V);
+  type IntoIter = EnumOptionMapIterMut<'a, T, V, BitsetWord>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter_mut()
+  }
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::IntoIterator for EnumOptionMap<T, V, BitsetWord>
+{
+  type Item = (T, V);
+  type IntoIter = EnumOptionMapIntoIter<T, V, BitsetWord>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    // Suppress `EnumOptionMap`'s `Drop` so the values can be moved out instead.
+    let mut this = mem::ManuallyDrop::new(self);
+    let valid = mem::take(&mut this.valid);
+    let data = mem::replace(&mut this.data, T::new_partial());
+    EnumOptionMapIntoIter {
+      iter: EnumSetIndexIter::new(valid),
+      data,
+    }
+  }
+}
+
+/// An owned iterator over the keys and values of a partial map.
+pub struct EnumOptionMapIntoIter<
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> {
+  iter: EnumSetIndexIter<T::BitsetArray, T, BitsetWord>,
+  data: T::PartialArray,
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > Iterator for EnumOptionMapIntoIter<T, V, BitsetWord>
+{
+  type Item = (T, V);
+
+  fn next(&mut self) -> Option<Self::Item> {
+    let index = self.iter.next()?;
+    let value = unsafe {
+      T::partial_slice_mut(&mut self.data)[index.into_usize()]
+        .assume_init_read()
+    };
+    Some((index.into_value(), value))
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    self.iter.size_hint()
+  }
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::FusedIterator for EnumOptionMapIntoIter<T, V, BitsetWord>
+{
+}
+
+impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > Drop for EnumOptionMapIntoIter<T, V, BitsetWord>
+{
+  fn drop(&mut self) {
+    // Drop the values that were not yielded; the validity cursor yields each
+    // remaining populated index exactly once.
+    for index in self.iter.by_ref() {
+      unsafe {
+        T::partial_slice_mut(&mut self.data)[index.into_usize()]
+          .assume_init_drop()
+      };
+    }
+  }
+}
+
 pub struct EnumOptionMapIter<
   'a,
   T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
   V: 'a,
   BitsetWord: BitsetWordTrait,
 > {
-  iter: EnumSetIndexIter<'a, T, BitsetWord>,
+  iter: EnumSetIndexIter<&'a T::BitsetArray, T, BitsetWord>,
   data: &'a T::PartialArray,
 }
 
@@ -350,13 +478,22 @@ impl<
   }
 }
 
+impl<
+    'a,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::FusedIterator for EnumOptionMapIter<'a, T, V, BitsetWord>
+{
+}
+
 pub struct EnumOptionMapIterMut<
   'a,
   T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
   V: 'a,
   BitsetWord: BitsetWordTrait,
 > {
-  iter: EnumSetIndexIter<'a, T, BitsetWord>,
+  iter: EnumSetIndexIter<&'a T::BitsetArray, T, BitsetWord>,
   data: slice::IterMut<'a, MaybeUninit<V>>,
   prev: usize,
 }
@@ -380,4 +517,13 @@ impl<
   fn size_hint(&self) -> (usize, Option<usize>) {
     self.iter.size_hint()
   }
+}
+
+impl<
+    'a,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::FusedIterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
+{
 }

@@ -1,7 +1,9 @@
+use crate::test::drop_tracker::DropTracker;
 use crate::test::types::{Sixteen, Three};
 use enumoid::EnumOptionMap;
 use enumoid::EnumSize;
 use enumoid::EnumVec;
+use std::cell::Cell;
 
 #[test]
 fn test_empty_state() {
@@ -846,4 +848,247 @@ fn test_try_from_gapped_option_map_fails() {
     Err(()),
     "Expected Err when option map is not a contiguous prefix"
   );
+}
+
+#[test]
+fn test_into_iterator_owned() {
+  // The consuming IntoIterator yields owned values, mirroring FromIterator<V>.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let collected: Vec<i32> = vec.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![10, 20, 30],
+    "Expected consuming iteration to yield owned values in order"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_partial() {
+  // A partially-filled vec only yields its populated prefix.
+  let vec: EnumVec<Three, i32> = [10, 20].into_iter().collect();
+  let collected: Vec<i32> = vec.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![10, 20],
+    "Expected consuming iteration to yield only the populated prefix"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_roundtrips() {
+  // into_iter().collect() reconstructs an equal vec.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let roundtripped: EnumVec<Three, i32> = vec.into_iter().collect();
+  let expected: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  assert_eq!(
+    roundtripped, expected,
+    "Expected into_iter().collect() to round-trip"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_exact_size() {
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let mut iter = vec.into_iter();
+  assert_eq!(iter.len(), 3, "Expected ExactSizeIterator len of 3");
+  assert_eq!(iter.size_hint(), (3, Some(3)), "Expected exact size hint");
+  iter.next();
+  assert_eq!(iter.len(), 2, "Expected len to decrease after next()");
+}
+
+#[test]
+fn test_into_iterator_owned_drops_all_when_consumed() {
+  let drops = Cell::new(0);
+  let vec: EnumVec<Three, DropTracker> = [
+    DropTracker::new(1, &drops),
+    DropTracker::new(2, &drops),
+    DropTracker::new(3, &drops),
+  ]
+  .into_iter()
+  .collect();
+
+  let ids: Vec<i32> = vec.into_iter().map(|t| t.id()).collect();
+  assert_eq!(ids, vec![1, 2, 3], "Expected ids in order");
+  assert_eq!(
+    drops.get(),
+    3,
+    "Expected each yielded element to be dropped exactly once"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_drops_remainder_when_abandoned() {
+  // Abandoning a partially-consumed iterator must drop the unyielded elements
+  // exactly once (and not the one already moved out).
+  let drops = Cell::new(0);
+  let vec: EnumVec<Three, DropTracker> = [
+    DropTracker::new(1, &drops),
+    DropTracker::new(2, &drops),
+    DropTracker::new(3, &drops),
+  ]
+  .into_iter()
+  .collect();
+
+  let mut iter = vec.into_iter();
+  {
+    let first = iter.next().expect("Expected a first element");
+    assert_eq!(first.id(), 1, "Expected first element id");
+    assert_eq!(drops.get(), 0, "Expected no drops while first is held");
+  }
+  assert_eq!(drops.get(), 1, "Expected the moved-out element to drop");
+
+  drop(iter);
+  assert_eq!(
+    drops.get(),
+    3,
+    "Expected the two unyielded elements to drop when abandoned"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_double_ended() {
+  // next() and next_back() meet in the middle, each element yielded once.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let mut iter = vec.into_iter();
+  assert_eq!(
+    iter.next_back(),
+    Some(30),
+    "Expected next_back() to yield the last element"
+  );
+  assert_eq!(
+    iter.next(),
+    Some(10),
+    "Expected next() to yield the first element"
+  );
+  assert_eq!(
+    iter.next_back(),
+    Some(20),
+    "Expected next_back() to yield the remaining middle element"
+  );
+  assert_eq!(iter.next(), None, "Expected exhaustion from the front");
+  assert_eq!(iter.next_back(), None, "Expected exhaustion from the back");
+}
+
+#[test]
+fn test_into_iterator_owned_double_ended_partial() {
+  // A partially-filled vec is double-ended only over its populated prefix.
+  let vec: EnumVec<Three, i32> = [10, 20].into_iter().collect();
+  let collected: Vec<i32> = vec.into_iter().rev().collect();
+  assert_eq!(
+    collected,
+    vec![20, 10],
+    "Expected reversed iteration over only the populated prefix"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_rev() {
+  // rev() relies on DoubleEndedIterator and yields values in reverse order.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let collected: Vec<i32> = vec.into_iter().rev().collect();
+  assert_eq!(
+    collected,
+    vec![30, 20, 10],
+    "Expected reversed iteration to yield values in reverse order"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_double_ended_exact_size() {
+  // len() stays accurate as the range is consumed from both ends.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let mut iter = vec.into_iter();
+  assert_eq!(iter.len(), 3, "Expected initial len of 3");
+  iter.next();
+  assert_eq!(iter.len(), 2, "Expected len 2 after next()");
+  iter.next_back();
+  assert_eq!(iter.len(), 1, "Expected len 1 after next_back()");
+  iter.next();
+  assert_eq!(iter.len(), 0, "Expected len 0 once the ends meet");
+}
+
+#[test]
+fn test_into_iterator_owned_fused() {
+  // Once exhausted, the iterator keeps returning None from both ends.
+  let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
+  let mut iter = vec.into_iter();
+  for _ in 0..3 {
+    assert!(
+      iter.next().is_some(),
+      "Expected three elements before exhaustion"
+    );
+  }
+  assert_eq!(iter.next(), None, "Expected None once exhausted");
+  assert_eq!(iter.next(), None, "Expected fused None on repeat next()");
+  assert_eq!(
+    iter.next_back(),
+    None,
+    "Expected fused None from the back once exhausted"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_double_ended_drops_remainder() {
+  // After taking one element from each end, abandoning the iterator drops only
+  // the unyielded middle element, exactly once, and never the yielded ends.
+  let drops = Cell::new(0);
+  let vec: EnumVec<Three, DropTracker> = [
+    DropTracker::new(1, &drops),
+    DropTracker::new(2, &drops),
+    DropTracker::new(3, &drops),
+  ]
+  .into_iter()
+  .collect();
+
+  let mut iter = vec.into_iter();
+  {
+    let front = iter.next().expect("Expected a front element");
+    let back = iter.next_back().expect("Expected a back element");
+    assert_eq!(front.id(), 1, "Expected front element id");
+    assert_eq!(back.id(), 3, "Expected back element id");
+    assert_eq!(drops.get(), 0, "Expected no drops while elements are held");
+  }
+  assert_eq!(
+    drops.get(),
+    2,
+    "Expected the two moved-out elements to drop"
+  );
+
+  drop(iter);
+  assert_eq!(
+    drops.get(),
+    3,
+    "Expected the single unyielded middle element to drop exactly once"
+  );
+}
+
+#[test]
+fn test_iter_mut_double_ended() {
+  // EnumSliceIterMut is double-ended; mutations through next_back must land.
+  let mut vec: EnumVec<Three, u16> = [10, 20, 30].into_iter().collect();
+
+  {
+    let mut iter = vec.iter_mut();
+    let (back_key, back_value) =
+      iter.next_back().expect("Expected a back element");
+    assert_eq!(back_key, Three::C, "Expected next_back() key to be C");
+    *back_value += 1;
+    let (front_key, front_value) =
+      iter.next().expect("Expected a front element");
+    assert_eq!(front_key, Three::A, "Expected next() key to be A");
+    *front_value += 1;
+    assert_eq!(
+      iter.next_back().map(|(k, v)| (k, *v)),
+      Some((Three::B, 20)),
+      "Expected next_back() to yield the middle element"
+    );
+    assert!(iter.next().is_none(), "Expected the ends to have met");
+    assert!(
+      iter.next_back().is_none(),
+      "Expected fused None from the back"
+    );
+  }
+
+  assert_eq!(vec[Three::A], 11, "Expected front mutation to persist");
+  assert_eq!(vec[Three::C], 31, "Expected back mutation to persist");
 }

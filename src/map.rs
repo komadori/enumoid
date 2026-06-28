@@ -191,6 +191,18 @@ impl<T: EnumArrayHelper<V>, V> IndexMut<T> for EnumMap<T, V> {
   }
 }
 
+impl<T: EnumArrayHelper<V>, V: Default> iter::FromIterator<(T, V)>
+  for EnumMap<T, V>
+{
+  fn from_iter<I: iter::IntoIterator<Item = (T, V)>>(iter: I) -> Self {
+    let mut map = EnumMap::<T, V>::new();
+    for (key, value) in iter {
+      map.set(key, value);
+    }
+    map
+  }
+}
+
 impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator for &'a EnumMap<T, V> {
   type Item = (T, &'a V);
   type IntoIter = EnumSliceIter<'a, T, V>;
@@ -210,6 +222,80 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator
   #[inline]
   fn into_iter(self) -> Self::IntoIter {
     self.iter_mut()
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> iter::IntoIterator for EnumMap<T, V> {
+  type Item = (T, V);
+  type IntoIter = EnumMapIntoIter<T, V>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    EnumMapIntoIter {
+      // `EnumMap` has no `Drop`, so the array can be moved out directly.
+      data: T::total_to_partial(self.data),
+      front: T::Word::ZERO,
+      back: T::SIZE_WORD,
+    }
+  }
+}
+
+/// An owned iterator over the keys and values of a total map.
+///
+/// `front` and `back` delimit the half-open range `front..back` of cells that
+/// have not yet been yielded; `next` advances `front`, `next_back` retreats
+/// `back`, and `Drop` reads out exactly the cells still in that range.
+pub struct EnumMapIntoIter<T: EnumArrayHelper<V>, V> {
+  data: T::PartialArray,
+  front: T::Word,
+  back: T::Word,
+}
+
+impl<T: EnumArrayHelper<V>, V> Iterator for EnumMapIntoIter<T, V> {
+  type Item = (T, V);
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.front == self.back {
+      return None;
+    }
+    let value = unsafe {
+      T::partial_slice_mut(&mut self.data)[self.front.as_()].assume_init_read()
+    };
+    let key = unsafe { T::from_word_unchecked(self.front) };
+    self.front = self.front.inc();
+    Some((key, value))
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let remaining = self.back.as_() - self.front.as_();
+    (remaining, Some(remaining))
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> DoubleEndedIterator for EnumMapIntoIter<T, V> {
+  fn next_back(&mut self) -> Option<Self::Item> {
+    if self.front == self.back {
+      return None;
+    }
+    self.back = self.back.dec();
+    let value = unsafe {
+      T::partial_slice_mut(&mut self.data)[self.back.as_()].assume_init_read()
+    };
+    let key = unsafe { T::from_word_unchecked(self.back) };
+    Some((key, value))
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> ExactSizeIterator for EnumMapIntoIter<T, V> {}
+
+impl<T: EnumArrayHelper<V>, V> iter::FusedIterator for EnumMapIntoIter<T, V> {}
+
+impl<T: EnumArrayHelper<V>, V> Drop for EnumMapIntoIter<T, V> {
+  fn drop(&mut self) {
+    let slice = T::partial_slice_mut(&mut self.data);
+    for cell in slice[self.front.as_()..self.back.as_()].iter_mut() {
+      unsafe { cell.assume_init_drop() };
+    }
   }
 }
 

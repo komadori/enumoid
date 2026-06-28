@@ -1,6 +1,8 @@
+use crate::test::drop_tracker::DropTracker;
 use crate::test::types::Three;
 use enumoid::EnumOptionMap;
 use enumoid::EnumSize;
+use std::cell::Cell;
 
 #[test]
 fn test_empty_state() {
@@ -687,5 +689,161 @@ fn test_swap_by_index_present_with_absent() {
     map.count(),
     1,
     "Expected count to remain 1 after swap_by_index"
+  );
+}
+
+#[test]
+fn test_from_iterator() {
+  // Collecting key-value pairs inserts each into the map.
+  let map: EnumOptionMap<Three, i32> =
+    [(Three::A, 10), (Three::C, 30)].into_iter().collect();
+
+  assert_eq!(map.get(Three::A), Some(&10), "Expected value for A");
+  assert_eq!(map.get(Three::B), None, "Expected absent key B");
+  assert_eq!(map.get(Three::C), Some(&30), "Expected value for C");
+  assert_eq!(map.count(), 2, "Expected count to be 2 after collecting");
+}
+
+#[test]
+fn test_from_iterator_duplicate_keys_take_last() {
+  // Later pairs for the same key override earlier ones.
+  let map: EnumOptionMap<Three, i32> =
+    [(Three::A, 10), (Three::A, 99)].into_iter().collect();
+
+  assert_eq!(
+    map.get(Three::A),
+    Some(&99),
+    "Expected the last value for a duplicated key"
+  );
+  assert_eq!(
+    map.count(),
+    1,
+    "Expected count to be 1 despite duplicate keys"
+  );
+}
+
+#[test]
+fn test_from_iterator_empty() {
+  // An empty iterator yields an empty map.
+  let map: EnumOptionMap<Three, i32> = std::iter::empty().collect();
+
+  assert!(map.is_empty(), "Expected empty map from empty iterator");
+  assert_eq!(map.count(), 0, "Expected count of 0 from empty iterator");
+}
+
+#[test]
+fn test_into_iterator_owned() {
+  // The consuming IntoIterator yields owned (key, value) pairs for populated
+  // keys only, mirroring FromIterator<(T, V)>.
+  let mut map = EnumOptionMap::<Three, i32>::new();
+  map.insert(Three::A, 10);
+  map.insert(Three::C, 30);
+
+  let collected: Vec<(Three, i32)> = map.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![(Three::A, 10), (Three::C, 30)],
+    "Expected consuming iteration to yield only populated pairs in order"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_roundtrips() {
+  let mut map = EnumOptionMap::<Three, i32>::new();
+  map.insert(Three::A, 10);
+  map.insert(Three::C, 30);
+
+  let roundtripped: EnumOptionMap<Three, i32> = map.into_iter().collect();
+
+  let mut expected = EnumOptionMap::<Three, i32>::new();
+  expected.insert(Three::A, 10);
+  expected.insert(Three::C, 30);
+  assert_eq!(
+    roundtripped, expected,
+    "Expected into_iter().collect() to round-trip"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_empty() {
+  let map = EnumOptionMap::<Three, i32>::new();
+  let collected: Vec<(Three, i32)> = map.into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![],
+    "Expected empty consuming iteration for empty map"
+  );
+}
+
+#[test]
+fn test_into_iterator_by_ref() {
+  let mut map = EnumOptionMap::<Three, i32>::new();
+  map.insert(Three::A, 10);
+  map.insert(Three::C, 30);
+
+  // IntoIterator for &EnumOptionMap
+  let collected: Vec<(Three, &i32)> = (&map).into_iter().collect();
+  assert_eq!(
+    collected,
+    vec![(Three::A, &10), (Three::C, &30)],
+    "Expected &EnumOptionMap iteration to yield populated pairs"
+  );
+
+  // IntoIterator for &mut EnumOptionMap
+  for (_, value) in &mut map {
+    *value += 1;
+  }
+  assert_eq!(
+    map.get(Three::A),
+    Some(&11),
+    "Expected value mutated via &mut"
+  );
+  assert_eq!(
+    map.get(Three::C),
+    Some(&31),
+    "Expected value mutated via &mut"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_drops_only_populated_when_consumed() {
+  // Only populated cells hold values; absent keys must never be dropped.
+  let drops = Cell::new(0);
+  let mut map = EnumOptionMap::<Three, DropTracker>::new();
+  map.insert(Three::A, DropTracker::new(1, &drops));
+  map.insert(Three::C, DropTracker::new(3, &drops));
+
+  let ids: Vec<i32> = map.into_iter().map(|(_, v)| v.id()).collect();
+  assert_eq!(ids, vec![1, 3], "Expected ids of populated keys in order");
+  assert_eq!(
+    drops.get(),
+    2,
+    "Expected only the two populated values to be dropped"
+  );
+}
+
+#[test]
+fn test_into_iterator_owned_drops_remainder_when_abandoned() {
+  // Abandoning a partially-consumed iterator drops every unyielded populated
+  // value exactly once, and nothing for the absent key.
+  let drops = Cell::new(0);
+  let mut map = EnumOptionMap::<Three, DropTracker>::new();
+  map.insert(Three::A, DropTracker::new(1, &drops));
+  map.insert(Three::C, DropTracker::new(3, &drops));
+
+  let mut iter = map.into_iter();
+  {
+    let (key, value) = iter.next().expect("Expected a first pair");
+    assert_eq!(key, Three::A, "Expected first populated key");
+    assert_eq!(value.id(), 1, "Expected first value id");
+    assert_eq!(drops.get(), 0, "Expected no drops while value is held");
+  }
+  assert_eq!(drops.get(), 1, "Expected the moved-out value to drop");
+
+  drop(iter);
+  assert_eq!(
+    drops.get(),
+    2,
+    "Expected the remaining populated value to drop when abandoned"
   );
 }

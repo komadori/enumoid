@@ -2,9 +2,11 @@ use crate::base::EnumSetHelper;
 use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
 use crate::EnumIndex;
+use std::borrow::Borrow;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::iter;
 use std::ops::Index;
 
 /// A set of enumoid `T`'s members.
@@ -114,13 +116,13 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
 
   /// Returns an iterator over the indices of the members of the set.
   #[inline]
-  pub fn iter_index(&self) -> EnumSetIndexIter<'_, T, BitsetWord> {
-    EnumSetIndexIter::new(self)
+  pub fn iter_index(&self) -> EnumSetIndexIter<&T::BitsetArray, T, BitsetWord> {
+    EnumSetIndexIter::from_storage(&self.data)
   }
 
   /// Returns an iterator over the members of the set.
   #[inline]
-  pub fn iter(&self) -> EnumSetIter<'_, T, BitsetWord> {
+  pub fn iter(&self) -> EnumSetIter<&T::BitsetArray, T, BitsetWord> {
     EnumSetIter {
       iter: self.iter_index(),
     }
@@ -208,37 +210,84 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Index<T>
   }
 }
 
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  iter::FromIterator<T> for EnumSet<T, BitsetWord>
+{
+  fn from_iter<I: iter::IntoIterator<Item = T>>(iter: I) -> Self {
+    let mut set = EnumSet::<T, BitsetWord>::new();
+    for key in iter {
+      set.insert(key);
+    }
+    set
+  }
+}
+
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> IntoIterator
+  for EnumSet<T, BitsetWord>
+{
+  type Item = T;
+  type IntoIter = EnumSetIter<T::BitsetArray, T, BitsetWord>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    EnumSetIter {
+      iter: EnumSetIndexIter::new(self),
+    }
+  }
+}
+
+impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> IntoIterator
+  for &'a EnumSet<T, BitsetWord>
+{
+  type Item = T;
+  type IntoIter = EnumSetIter<&'a T::BitsetArray, T, BitsetWord>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    self.iter()
+  }
+}
+
+/// An iterator over the indices of the members of a set.
+///
+/// The storage `S` borrows the underlying bitset array: `&T::BitsetArray` when
+/// iterating over a borrowed set, or the owned `T::BitsetArray` when iterating
+/// over a set by value.
 pub struct EnumSetIndexIter<
-  'a,
+  S,
   T: EnumSetHelper<BitsetWord>,
   BitsetWord: BitsetWordTrait,
 > {
-  flags: &'a EnumSet<T, BitsetWord>,
+  data: S,
   current: T::BitsetWord,
   word_index: usize,
 }
 
-impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
-  EnumSetIndexIter<'a, T, BitsetWord>
+impl<
+    S: Borrow<T::BitsetArray>,
+    T: EnumSetHelper<BitsetWord>,
+    BitsetWord: BitsetWordTrait,
+  > EnumSetIndexIter<S, T, BitsetWord>
 {
-  pub fn new(flags: &'a EnumSet<T, BitsetWord>) -> Self {
-    let slice = T::slice_bitset(&flags.data);
-    let (current, word_index) = if let Some(first_word) = slice.first().copied()
-    {
-      (first_word, 0)
-    } else {
-      (T::BitsetWord::ZERO, 1)
-    };
+  fn from_storage(data: S) -> Self {
+    let (current, word_index) =
+      match T::slice_bitset(data.borrow()).first().copied() {
+        Some(first_word) => (first_word, 0),
+        None => (T::BitsetWord::ZERO, 1),
+      };
     Self {
-      flags,
+      data,
       current,
       word_index,
     }
   }
 }
 
-impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
-  for EnumSetIndexIter<'a, T, BitsetWord>
+impl<
+    S: Borrow<T::BitsetArray>,
+    T: EnumSetHelper<BitsetWord>,
+    BitsetWord: BitsetWordTrait,
+  > Iterator for EnumSetIndexIter<S, T, BitsetWord>
 {
   type Item = EnumIndex<T>;
 
@@ -246,7 +295,7 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
     if self.word_index >= T::BITSET_WORDS {
       return None;
     }
-    let slice = T::slice_bitset(&self.flags.data);
+    let slice = T::slice_bitset(self.data.borrow());
     while self.current == T::BitsetWord::ZERO {
       self.word_index += 1;
       self.current = slice.get(self.word_index).copied()?;
@@ -269,26 +318,58 @@ impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
   }
 }
 
+impl<
+    S: Borrow<T::BitsetArray>,
+    T: EnumSetHelper<BitsetWord>,
+    BitsetWord: BitsetWordTrait,
+  > iter::FusedIterator for EnumSetIndexIter<S, T, BitsetWord>
+{
+}
+
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
+  EnumSetIndexIter<T::BitsetArray, T, BitsetWord>
+{
+  pub(crate) fn new(set: EnumSet<T, BitsetWord>) -> Self {
+    Self::from_storage(set.data)
+  }
+}
+
+/// An iterator over the members of a set.
+///
+/// Wraps an [`EnumSetIndexIter`], mapping each index to its member value. The
+/// storage `S` selects borrowed (`&T::BitsetArray`) or owned (`T::BitsetArray`)
+/// iteration, just as for [`EnumSetIndexIter`].
 pub struct EnumSetIter<
-  'a,
+  S,
   T: EnumSetHelper<BitsetWord>,
   BitsetWord: BitsetWordTrait,
 > {
-  iter: EnumSetIndexIter<'a, T, BitsetWord>,
+  iter: EnumSetIndexIter<S, T, BitsetWord>,
 }
 
-impl<'a, T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Iterator
-  for EnumSetIter<'a, T, BitsetWord>
+impl<
+    S: Borrow<T::BitsetArray>,
+    T: EnumSetHelper<BitsetWord>,
+    BitsetWord: BitsetWordTrait,
+  > Iterator for EnumSetIter<S, T, BitsetWord>
 {
   type Item = T;
 
   #[inline]
   fn next(&mut self) -> Option<Self::Item> {
-    self.iter.next().map(|index| index.into_value())
+    self.iter.next().map(EnumIndex::into_value)
   }
 
   #[inline]
   fn size_hint(&self) -> (usize, Option<usize>) {
     self.iter.size_hint()
   }
+}
+
+impl<
+    S: Borrow<T::BitsetArray>,
+    T: EnumSetHelper<BitsetWord>,
+    BitsetWord: BitsetWordTrait,
+  > iter::FusedIterator for EnumSetIter<S, T, BitsetWord>
+{
 }

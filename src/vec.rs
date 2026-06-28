@@ -361,6 +361,82 @@ impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator
   }
 }
 
+impl<T: EnumArrayHelper<V>, V> iter::IntoIterator for EnumVec<T, V> {
+  type Item = V;
+  type IntoIter = EnumVecIntoIter<T, V>;
+
+  #[inline]
+  fn into_iter(self) -> Self::IntoIter {
+    // Suppress `EnumVec`'s `Drop` so the elements can be moved out instead.
+    let mut this = mem::ManuallyDrop::new(self);
+    let len = this.len;
+    let data = mem::replace(&mut this.data, T::new_partial());
+    EnumVecIntoIter {
+      data,
+      front: T::Word::ZERO,
+      back: len,
+    }
+  }
+}
+
+/// An owned iterator over the values of a vector.
+///
+/// `front` and `back` delimit the half-open range `front..back` of elements
+/// that have not yet been yielded; `next` advances `front`, `next_back`
+/// retreats `back`, and `Drop` reads out exactly the elements still in that
+/// range.
+pub struct EnumVecIntoIter<T: EnumArrayHelper<V>, V> {
+  data: T::PartialArray,
+  front: T::Word,
+  back: T::Word,
+}
+
+impl<T: EnumArrayHelper<V>, V> Iterator for EnumVecIntoIter<T, V> {
+  type Item = V;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.front == self.back {
+      return None;
+    }
+    let value = unsafe {
+      T::partial_slice_mut(&mut self.data)[self.front.as_()].assume_init_read()
+    };
+    self.front = self.front.inc();
+    Some(value)
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    let remaining = self.back.as_() - self.front.as_();
+    (remaining, Some(remaining))
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> DoubleEndedIterator for EnumVecIntoIter<T, V> {
+  fn next_back(&mut self) -> Option<Self::Item> {
+    if self.front == self.back {
+      return None;
+    }
+    self.back = self.back.dec();
+    let value = unsafe {
+      T::partial_slice_mut(&mut self.data)[self.back.as_()].assume_init_read()
+    };
+    Some(value)
+  }
+}
+
+impl<T: EnumArrayHelper<V>, V> ExactSizeIterator for EnumVecIntoIter<T, V> {}
+
+impl<T: EnumArrayHelper<V>, V> iter::FusedIterator for EnumVecIntoIter<T, V> {}
+
+impl<T: EnumArrayHelper<V>, V> Drop for EnumVecIntoIter<T, V> {
+  fn drop(&mut self) {
+    let slice = T::partial_slice_mut(&mut self.data);
+    for cell in slice[self.front.as_()..self.back.as_()].iter_mut() {
+      unsafe { cell.assume_init_drop() };
+    }
+  }
+}
+
 impl<T: EnumArrayHelper<V> + EnumSetHelper<u8>, V> TryFrom<EnumOptionMap<T, V>>
   for EnumVec<T, V>
 {
