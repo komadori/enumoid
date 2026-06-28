@@ -1,6 +1,6 @@
 use enumoid::{EnumMap, EnumOptionMap, EnumSet, EnumVec};
 
-use super::types::Three;
+use super::types::{Three, WideThree};
 
 #[derive(Debug, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 struct TestData {
@@ -66,6 +66,31 @@ fn test_enum_option_map_empty_round_trip() {
 
   let ron_str = ron::to_string(&map).expect("Serialization failed");
   let deserialized: EnumOptionMap<Three, i32> =
+    ron::from_str(&ron_str).expect("Deserialization failed");
+
+  assert_eq!(map, deserialized);
+}
+
+#[test]
+fn test_enum_option_map_wide_bitset_round_trip() {
+  let mut map: EnumOptionMap<WideThree, TestData, usize> = EnumOptionMap::new();
+  map.insert(
+    WideThree::A,
+    TestData {
+      value: 42,
+      name: "answer".to_string(),
+    },
+  );
+  map.insert(
+    WideThree::C,
+    TestData {
+      value: 999,
+      name: "large".to_string(),
+    },
+  );
+
+  let ron_str = ron::to_string(&map).expect("Serialization failed");
+  let deserialized: EnumOptionMap<WideThree, TestData, usize> =
     ron::from_str(&ron_str).expect("Deserialization failed");
 
   assert_eq!(map, deserialized);

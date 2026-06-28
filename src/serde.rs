@@ -64,9 +64,10 @@ where
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<u8> + ser::Serialize,
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + ser::Serialize,
     V: ser::Serialize,
-  > ser::Serialize for EnumOptionMap<T, V>
+    BitsetWord: BitsetWordTrait,
+  > ser::Serialize for EnumOptionMap<T, V, BitsetWord>
 {
   fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
   where

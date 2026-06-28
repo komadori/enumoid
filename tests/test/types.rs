@@ -9,6 +9,7 @@ pub enum Three {
 }
 
 #[derive(Copy, Clone, Debug, Enumoid, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[index_type(u32)]
 #[bitset_word_types(u8, u16, usize)]
 pub enum WideThree {
