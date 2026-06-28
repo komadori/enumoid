@@ -102,17 +102,17 @@ impl<T: Enumoid> EnumSize<T> {
   }
 
   #[inline]
-  pub fn into_word(&self) -> T::Word {
+  pub fn into_word(self) -> T::Word {
     self.0
   }
 
   #[inline]
-  pub fn into_usize(&self) -> usize {
+  pub fn into_usize(self) -> usize {
     self.0.as_()
   }
 
   #[inline]
-  pub fn into_last_index(&self) -> Option<EnumIndex<T>> {
+  pub fn into_last_index(self) -> Option<EnumIndex<T>> {
     if self.0 > T::Word::ZERO {
       Some(unsafe { EnumIndex::from_word_unchecked(self.0.dec()) })
     } else {
@@ -121,7 +121,7 @@ impl<T: Enumoid> EnumSize<T> {
   }
 
   #[inline]
-  pub fn into_last(&self) -> Option<T> {
+  pub fn into_last(self) -> Option<T> {
     self.into_last_index().map(|i| i.into_value())
   }
 
@@ -130,7 +130,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn next_index(&self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
+  pub fn next_index(self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
     assert!(index.0 < self.0);
     let nw = index.0.inc();
     if nw < self.0 {
@@ -145,7 +145,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn next(&self, value: T) -> Option<T> {
+  pub fn next(self, value: T) -> Option<T> {
     self.next_index(value.into()).map(|i| i.into_value())
   }
 
@@ -154,7 +154,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn prev_index(&self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
+  pub fn prev_index(self, index: EnumIndex<T>) -> Option<EnumIndex<T>> {
     assert!(index.0 < self.0);
     if index.0 > T::Word::ZERO {
       Some(unsafe { EnumIndex::from_word_unchecked(index.0.dec()) })
@@ -168,7 +168,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn prev(&self, value: T) -> Option<T> {
+  pub fn prev(self, value: T) -> Option<T> {
     self.prev_index(value.into()).map(|i| i.into_value())
   }
 
@@ -177,7 +177,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn next_index_wrapped(&self, index: EnumIndex<T>) -> EnumIndex<T> {
+  pub fn next_index_wrapped(self, index: EnumIndex<T>) -> EnumIndex<T> {
     assert!(index.0 < self.0);
     let nw = index.0.inc();
     let q = if nw < self.0 { nw } else { T::Word::ZERO };
@@ -189,7 +189,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn next_wrapped(&self, value: T) -> T {
+  pub fn next_wrapped(self, value: T) -> T {
     self.next_index_wrapped(value.into()).into_value()
   }
 
@@ -198,7 +198,7 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn prev_index_wrapped(&self, index: EnumIndex<T>) -> EnumIndex<T> {
+  pub fn prev_index_wrapped(self, index: EnumIndex<T>) -> EnumIndex<T> {
     assert!(index.0 < self.0);
     let q = if index.0 > T::Word::ZERO {
       index.0
@@ -214,23 +214,23 @@ impl<T: Enumoid> EnumSize<T> {
   /// # Panics
   /// Panics if the value is beyond the size.
   #[inline]
-  pub fn prev_wrapped(&self, value: T) -> T {
+  pub fn prev_wrapped(self, value: T) -> T {
     self.prev_index_wrapped(value.into()).into_value()
   }
 
   #[inline]
-  pub fn contains_index(&self, index: EnumIndex<T>) -> bool {
+  pub fn contains_index(self, index: EnumIndex<T>) -> bool {
     index.0 < self.0
   }
 
   #[inline]
-  pub fn contains(&self, value: T) -> bool {
+  pub fn contains(self, value: T) -> bool {
     value.into_word() < self.0
   }
 
   /// Returns the next size larger or None.
   #[inline]
-  pub fn increase(&self) -> Option<Self> {
+  pub fn increase(self) -> Option<Self> {
     if self.0 < T::SIZE_WORD {
       Some(unsafe { EnumSize::from_word_unchecked(self.0.inc()) })
     } else {
@@ -240,7 +240,7 @@ impl<T: Enumoid> EnumSize<T> {
 
   /// Returns the next size smaller or None.
   #[inline]
-  pub fn decrease(&self) -> Option<Self> {
+  pub fn decrease(self) -> Option<Self> {
     if self.0 > T::Word::ZERO {
       Some(unsafe { EnumSize::from_word_unchecked(self.0.dec()) })
     } else {
@@ -249,25 +249,25 @@ impl<T: Enumoid> EnumSize<T> {
   }
 
   #[inline]
-  pub fn iter(&self) -> EnumoidIter<T> {
+  pub fn iter(self) -> EnumoidIter<T> {
     T::word_range(T::Word::ZERO, self.0)
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
-  pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
+  pub fn iter_until(self, until: T) -> EnumoidIter<T> {
     T::word_range(T::Word::ZERO, self.0.min(until.into_word().inc()))
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
-  pub fn iter_from(&self, from: T) -> EnumoidIter<T> {
+  pub fn iter_from(self, from: T) -> EnumoidIter<T> {
     T::word_range(from.into_word(), self.0)
       .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]
-  pub fn iter_from_until(&self, from: T, until: T) -> EnumoidIter<T> {
+  pub fn iter_from_until(self, from: T, until: T) -> EnumoidIter<T> {
     let w = until.into_word().inc();
     if w < self.0 {
       unsafe { EnumSize::from_word_unchecked(w) }.iter_from(from)
