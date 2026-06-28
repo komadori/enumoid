@@ -339,6 +339,16 @@ impl<T: EnumArrayHelper<V>, V> iter::FromIterator<V> for EnumVec<T, V> {
   }
 }
 
+impl<T: EnumArrayHelper<V>, V> iter::Extend<V> for EnumVec<T, V> {
+  fn extend<I: iter::IntoIterator<Item = V>>(&mut self, iter: I) {
+    for i in iter {
+      if self.try_push(i).is_err() {
+        break;
+      }
+    }
+  }
+}
+
 impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator for &'a EnumVec<T, V> {
   type Item = (T, &'a V);
   type IntoIter = EnumSliceIter<'a, T, V>;

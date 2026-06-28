@@ -710,6 +710,32 @@ fn test_from_iterator() {
 }
 
 #[test]
+fn test_extend() {
+  // Extending pushes additional elements onto an existing vec.
+  let mut vec = EnumVec::<Three, i32>::new();
+  vec.try_push(10).unwrap();
+  vec.extend([20, 30]);
+
+  assert_eq!(vec[Three::A], 10, "Expected preexisting element");
+  assert_eq!(vec[Three::B], 20, "Expected first extended element");
+  assert_eq!(vec[Three::C], 30, "Expected second extended element");
+  assert!(vec.is_full(), "Expected vec to be full after extending");
+}
+
+#[test]
+fn test_extend_overflow() {
+  // Extending beyond capacity stops at capacity rather than panicking.
+  let mut vec = EnumVec::<Three, i32>::new();
+  vec.extend([10, 20, 30, 40, 50]);
+
+  assert!(
+    vec.is_full(),
+    "Expected vec to be full after extending beyond capacity"
+  );
+  assert_eq!(vec[Three::C], 30, "Expected last in-capacity element");
+}
+
+#[test]
 fn test_from_iterator_overflow() {
   // Collecting more elements than the type can hold stops at capacity rather
   // than panicking, and stops pulling from the iterator once full.

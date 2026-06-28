@@ -335,6 +335,19 @@ impl<
 }
 
 impl<
+    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+    V,
+    BitsetWord: BitsetWordTrait,
+  > iter::Extend<(T, V)> for EnumOptionMap<T, V, BitsetWord>
+{
+  fn extend<I: iter::IntoIterator<Item = (T, V)>>(&mut self, iter: I) {
+    for (key, value) in iter {
+      self.insert(key, value);
+    }
+  }
+}
+
+impl<
     'a,
     T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
     V,

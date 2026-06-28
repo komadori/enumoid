@@ -222,6 +222,16 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait>
   }
 }
 
+impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> iter::Extend<T>
+  for EnumSet<T, BitsetWord>
+{
+  fn extend<I: iter::IntoIterator<Item = T>>(&mut self, iter: I) {
+    for key in iter {
+      self.insert(key);
+    }
+  }
+}
+
 impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> IntoIterator
   for EnumSet<T, BitsetWord>
 {

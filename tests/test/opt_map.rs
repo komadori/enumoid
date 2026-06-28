@@ -705,6 +705,27 @@ fn test_from_iterator() {
 }
 
 #[test]
+fn test_extend() {
+  // Extending inserts additional pairs into an existing map.
+  let mut map = EnumOptionMap::<Three, i32>::new();
+  map.insert(Three::A, 10);
+  map.extend([(Three::A, 99), (Three::C, 30)]);
+
+  assert_eq!(
+    map.get(Three::A),
+    Some(&99),
+    "Expected overridden value for A"
+  );
+  assert_eq!(map.get(Three::B), None, "Expected absent key B");
+  assert_eq!(
+    map.get(Three::C),
+    Some(&30),
+    "Expected extended value for C"
+  );
+  assert_eq!(map.count(), 2, "Expected count to be 2 after extending");
+}
+
+#[test]
 fn test_from_iterator_duplicate_keys_take_last() {
   // Later pairs for the same key override earlier ones.
   let map: EnumOptionMap<Three, i32> =

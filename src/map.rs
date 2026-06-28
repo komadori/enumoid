@@ -203,6 +203,14 @@ impl<T: EnumArrayHelper<V>, V: Default> iter::FromIterator<(T, V)>
   }
 }
 
+impl<T: EnumArrayHelper<V>, V> iter::Extend<(T, V)> for EnumMap<T, V> {
+  fn extend<I: iter::IntoIterator<Item = (T, V)>>(&mut self, iter: I) {
+    for (key, value) in iter {
+      self.set(key, value);
+    }
+  }
+}
+
 impl<'a, T: EnumArrayHelper<V>, V> iter::IntoIterator for &'a EnumMap<T, V> {
   type Item = (T, &'a V);
   type IntoIter = EnumSliceIter<'a, T, V>;

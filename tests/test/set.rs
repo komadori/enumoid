@@ -775,6 +775,19 @@ fn test_from_iterator() {
 }
 
 #[test]
+fn test_extend() {
+  // Extending inserts additional members into an existing set.
+  let mut set = EnumSet::<Three>::new();
+  set.insert(Three::A);
+  set.extend([Three::B, Three::B, Three::C]);
+
+  assert!(set.contains(Three::A), "Expected preexisting member A");
+  assert!(set.contains(Three::B), "Expected extended member B");
+  assert!(set.contains(Three::C), "Expected extended member C");
+  assert_eq!(set.count(), 3, "Expected count of 3 after extending");
+}
+
+#[test]
 fn test_from_iterator_duplicates() {
   // Duplicate keys are idempotent and don't inflate the count.
   let set: EnumSet<Three> =

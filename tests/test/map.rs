@@ -360,6 +360,31 @@ fn test_from_iterator() {
 }
 
 #[test]
+fn test_extend() {
+  // Extending overlays new pairs onto an existing map.
+  let mut map = EnumMap::<Three, i32>::new();
+  map.set(Three::A, 1);
+  map.extend([(Three::B, 20), (Three::C, 30)]);
+
+  assert_eq!(*map.get(Three::A), 1, "Expected preexisting value for A");
+  assert_eq!(*map.get(Three::B), 20, "Expected extended value for B");
+  assert_eq!(*map.get(Three::C), 30, "Expected extended value for C");
+}
+
+#[test]
+fn test_extend_duplicate_keys_take_last() {
+  // Later pairs for the same key override earlier ones.
+  let mut map = EnumMap::<Three, i32>::new();
+  map.extend([(Three::A, 10), (Three::A, 99)]);
+
+  assert_eq!(
+    *map.get(Three::A),
+    99,
+    "Expected the last value for a duplicated key"
+  );
+}
+
+#[test]
 fn test_from_iterator_partial_uses_defaults() {
   // Keys absent from the iterator fall back to the default value.
   let map: EnumMap<Three, i32> =
