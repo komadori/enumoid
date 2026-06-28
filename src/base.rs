@@ -78,7 +78,7 @@ impl<T: Enumoid> EnumSize<T> {
   pub(crate) unsafe fn from_word_unchecked(value: T::Word) -> Self {
     hint_assert!(
       value <= T::SIZE_WORD,
-      "from_word_unchecked: Size out of bounds: {:?} >= {:?}",
+      "from_word_unchecked: Size out of bounds: {:?} > {:?}",
       value,
       T::SIZE_WORD
     );
