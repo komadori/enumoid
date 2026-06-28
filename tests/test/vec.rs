@@ -1,4 +1,5 @@
 use crate::test::types::{Sixteen, Three};
+use enumoid::EnumOptionMap;
 use enumoid::EnumSize;
 use enumoid::EnumVec;
 
@@ -707,6 +708,31 @@ fn test_from_iterator() {
 }
 
 #[test]
+fn test_from_iterator_overflow() {
+  // Collecting more elements than the type can hold stops at capacity rather
+  // than panicking, and stops pulling from the iterator once full.
+  let mut iter = [10, 20, 30, 40, 50].into_iter();
+  let vec: EnumVec<Three, i32> = iter.by_ref().collect();
+
+  assert!(
+    vec.is_full(),
+    "Expected vec to be full after collecting beyond capacity"
+  );
+  assert_eq!(vec[Three::A], 10, "Expected first element");
+  assert_eq!(vec[Three::B], 20, "Expected second element");
+  assert_eq!(vec[Three::C], 30, "Expected third element");
+
+  // The overflow `break` must fire on the first element past capacity (40),
+  // leaving the remainder of the iterator unconsumed.
+  let remaining: Vec<i32> = iter.collect();
+  assert_eq!(
+    remaining,
+    vec![50],
+    "Expected collect to stop pulling once the vec is full"
+  );
+}
+
+#[test]
 fn test_iterator_partial_consumption() {
   let vec: EnumVec<Three, i32> = [10, 20, 30].into_iter().collect();
 
@@ -794,4 +820,30 @@ fn test_push() {
 fn test_swap_out_of_bounds_panics() {
   let mut vec = EnumVec::<Three, u16>::new();
   vec.swap(Three::A, Three::C);
+}
+
+#[test]
+fn test_try_from_contiguous_option_map() {
+  let mut opt = EnumOptionMap::<Three, i32>::new();
+  opt.insert(Three::A, 10);
+  opt.insert(Three::B, 20); // [A, B] is a contiguous prefix, so vec-representable
+
+  let vec = EnumVec::try_from(opt)
+    .expect("Expected Ok when option map is a contiguous prefix");
+  assert_eq!(vec[Three::A], 10, "Expected converted value for A");
+  assert_eq!(vec[Three::B], 20, "Expected converted value for B");
+  assert_eq!(vec.get(Three::C), None, "Expected C to be absent");
+}
+
+#[test]
+fn test_try_from_gapped_option_map_fails() {
+  let mut opt = EnumOptionMap::<Three, i32>::new();
+  opt.insert(Three::A, 10);
+  opt.insert(Three::C, 30); // [A, _, C] has a gap, so not vec-representable
+
+  assert_eq!(
+    EnumVec::try_from(opt),
+    Err(()),
+    "Expected Err when option map is not a contiguous prefix"
+  );
 }

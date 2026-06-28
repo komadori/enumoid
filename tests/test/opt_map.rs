@@ -417,6 +417,36 @@ fn test_is_vec() {
 }
 
 #[test]
+fn test_eq() {
+  let mut a = EnumOptionMap::<Three, i32>::new();
+  a.insert(Three::A, 10);
+  a.insert(Three::C, 30);
+
+  // Equal maps compare equal.
+  let mut b = EnumOptionMap::<Three, i32>::new();
+  b.insert(Three::A, 10);
+  b.insert(Three::C, 30);
+  assert_eq!(a, b, "Expected maps with identical entries to be equal");
+
+  // A differing value at a shared key compares unequal.
+  let mut differing_value = EnumOptionMap::<Three, i32>::new();
+  differing_value.insert(Three::A, 10);
+  differing_value.insert(Three::C, 99);
+  assert_ne!(
+    a, differing_value,
+    "Expected maps with a differing value to be unequal"
+  );
+
+  // A differing presence (Some vs None) compares unequal.
+  let mut differing_presence = EnumOptionMap::<Three, i32>::new();
+  differing_presence.insert(Three::A, 10);
+  assert_ne!(
+    a, differing_presence,
+    "Expected maps with differing presence to be unequal"
+  );
+}
+
+#[test]
 fn test_mutable_get() {
   let mut map = EnumOptionMap::<Three, i32>::new();
 

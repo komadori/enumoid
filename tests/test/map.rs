@@ -1,5 +1,6 @@
 use crate::test::types::Three;
 use enumoid::EnumMap;
+use enumoid::EnumOptionMap;
 
 #[test]
 fn test_empty_state() {
@@ -313,5 +314,32 @@ fn test_get_by_index_mut() {
     *map.get_by_index(Three::C.into()),
     300,
     "Expected unchanged value for index C"
+  );
+}
+
+#[test]
+fn test_try_from_full_option_map() {
+  let mut opt = EnumOptionMap::<Three, i32>::new();
+  opt.insert(Three::A, 10);
+  opt.insert(Three::B, 20);
+  opt.insert(Three::C, 30);
+
+  let map =
+    EnumMap::try_from(opt).expect("Expected Ok when option map is full");
+  assert_eq!(*map.get(Three::A), 10, "Expected converted value for A");
+  assert_eq!(*map.get(Three::B), 20, "Expected converted value for B");
+  assert_eq!(*map.get(Three::C), 30, "Expected converted value for C");
+}
+
+#[test]
+fn test_try_from_partial_option_map_fails() {
+  let mut opt = EnumOptionMap::<Three, i32>::new();
+  opt.insert(Three::A, 10);
+  opt.insert(Three::C, 30); // Missing Three::B, so not full
+
+  assert_eq!(
+    EnumMap::try_from(opt),
+    Err(()),
+    "Expected Err when option map is not full"
   );
 }
