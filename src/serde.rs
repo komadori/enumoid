@@ -22,11 +22,11 @@ struct OptMapSerdeVisitor<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-    R,
-  > OptMapSerdeVisitor<T, V, BitsetWord, R>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+  R,
+> OptMapSerdeVisitor<T, V, BitsetWord, R>
 {
   fn new() -> Self {
     OptMapSerdeVisitor {
@@ -64,10 +64,10 @@ where
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + ser::Serialize,
-    V: ser::Serialize,
-    BitsetWord: BitsetWordTrait,
-  > ser::Serialize for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + ser::Serialize,
+  V: ser::Serialize,
+  BitsetWord: BitsetWordTrait,
+> ser::Serialize for EnumOptionMap<T, V, BitsetWord>
 {
   fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
   where
@@ -83,11 +83,11 @@ impl<
 }
 
 impl<
-    'de,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
-    V: de::Deserialize<'de>,
-    BitsetWord: BitsetWordTrait,
-  > de::Deserialize<'de> for EnumOptionMap<T, V, BitsetWord>
+  'de,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
+  V: de::Deserialize<'de>,
+  BitsetWord: BitsetWordTrait,
+> de::Deserialize<'de> for EnumOptionMap<T, V, BitsetWord>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>
   where
@@ -119,10 +119,10 @@ impl<T: EnumArrayHelper<V> + serde::ser::Serialize, V: serde::ser::Serialize>
 }
 
 impl<
-    'de,
-    T: EnumArrayHelper<V> + EnumSetHelper<u8> + de::Deserialize<'de>,
-    V: de::Deserialize<'de>,
-  > de::Deserialize<'de> for EnumMap<T, V>
+  'de,
+  T: EnumArrayHelper<V> + EnumSetHelper<u8> + de::Deserialize<'de>,
+  V: de::Deserialize<'de>,
+> de::Deserialize<'de> for EnumMap<T, V>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>
   where
@@ -149,10 +149,10 @@ impl<T: EnumArrayHelper<V> + ser::Serialize, V: ser::Serialize> ser::Serialize
 }
 
 impl<
-    'de,
-    T: EnumArrayHelper<V> + EnumSetHelper<u8> + de::Deserialize<'de>,
-    V: de::Deserialize<'de>,
-  > de::Deserialize<'de> for EnumVec<T, V>
+  'de,
+  T: EnumArrayHelper<V> + EnumSetHelper<u8> + de::Deserialize<'de>,
+  V: de::Deserialize<'de>,
+> de::Deserialize<'de> for EnumVec<T, V>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>
   where
@@ -207,10 +207,8 @@ where
   }
 }
 
-impl<
-    T: EnumSetHelper<BitsetWord> + ser::Serialize,
-    BitsetWord: BitsetWordTrait,
-  > ser::Serialize for EnumSet<T, BitsetWord>
+impl<T: EnumSetHelper<BitsetWord> + ser::Serialize, BitsetWord: BitsetWordTrait>
+  ser::Serialize for EnumSet<T, BitsetWord>
 {
   fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
   where
@@ -226,10 +224,10 @@ impl<
 }
 
 impl<
-    'de,
-    T: EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
-    BitsetWord: BitsetWordTrait,
-  > de::Deserialize<'de> for EnumSet<T, BitsetWord>
+  'de,
+  T: EnumSetHelper<BitsetWord> + de::Deserialize<'de>,
+  BitsetWord: BitsetWordTrait,
+> de::Deserialize<'de> for EnumSet<T, BitsetWord>
 {
   fn deserialize<D>(de: D) -> Result<Self, D::Error>
   where

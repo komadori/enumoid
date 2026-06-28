@@ -1,7 +1,7 @@
+use crate::EnumIndex;
 use crate::base::EnumSetHelper;
 use crate::sub_base::BitsetWordTrait;
 use crate::sub_base::RawSizeWord;
-use crate::EnumIndex;
 use std::borrow::Borrow;
 use std::fmt;
 use std::fmt::Debug;
@@ -202,11 +202,7 @@ impl<T: EnumSetHelper<BitsetWord>, BitsetWord: BitsetWordTrait> Index<T>
 
   #[inline]
   fn index(&self, i: T) -> &bool {
-    if self.contains(i) {
-      TRUE
-    } else {
-      FALSE
-    }
+    if self.contains(i) { TRUE } else { FALSE }
   }
 }
 
@@ -274,10 +270,10 @@ pub struct EnumSetIndexIter<
 }
 
 impl<
-    S: Borrow<T::BitsetArray>,
-    T: EnumSetHelper<BitsetWord>,
-    BitsetWord: BitsetWordTrait,
-  > EnumSetIndexIter<S, T, BitsetWord>
+  S: Borrow<T::BitsetArray>,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> EnumSetIndexIter<S, T, BitsetWord>
 {
   fn from_storage(data: S) -> Self {
     let (current, word_index) =
@@ -294,10 +290,10 @@ impl<
 }
 
 impl<
-    S: Borrow<T::BitsetArray>,
-    T: EnumSetHelper<BitsetWord>,
-    BitsetWord: BitsetWordTrait,
-  > Iterator for EnumSetIndexIter<S, T, BitsetWord>
+  S: Borrow<T::BitsetArray>,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> Iterator for EnumSetIndexIter<S, T, BitsetWord>
 {
   type Item = EnumIndex<T>;
 
@@ -329,10 +325,10 @@ impl<
 }
 
 impl<
-    S: Borrow<T::BitsetArray>,
-    T: EnumSetHelper<BitsetWord>,
-    BitsetWord: BitsetWordTrait,
-  > iter::FusedIterator for EnumSetIndexIter<S, T, BitsetWord>
+  S: Borrow<T::BitsetArray>,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> iter::FusedIterator for EnumSetIndexIter<S, T, BitsetWord>
 {
 }
 
@@ -358,10 +354,10 @@ pub struct EnumSetIter<
 }
 
 impl<
-    S: Borrow<T::BitsetArray>,
-    T: EnumSetHelper<BitsetWord>,
-    BitsetWord: BitsetWordTrait,
-  > Iterator for EnumSetIter<S, T, BitsetWord>
+  S: Borrow<T::BitsetArray>,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> Iterator for EnumSetIter<S, T, BitsetWord>
 {
   type Item = T;
 
@@ -377,9 +373,9 @@ impl<
 }
 
 impl<
-    S: Borrow<T::BitsetArray>,
-    T: EnumSetHelper<BitsetWord>,
-    BitsetWord: BitsetWordTrait,
-  > iter::FusedIterator for EnumSetIter<S, T, BitsetWord>
+  S: Borrow<T::BitsetArray>,
+  T: EnumSetHelper<BitsetWord>,
+  BitsetWord: BitsetWordTrait,
+> iter::FusedIterator for EnumSetIter<S, T, BitsetWord>
 {
 }

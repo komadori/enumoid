@@ -1,10 +1,10 @@
+use crate::EnumIndex;
 use crate::base::EnumArrayHelper;
 use crate::base::EnumSetHelper;
 use crate::base::EnumSize;
 use crate::set::EnumSet;
 use crate::set::EnumSetIndexIter;
 use crate::sub_base::BitsetWordTrait;
-use crate::EnumIndex;
 use core::slice;
 use std::fmt;
 use std::fmt::Debug;
@@ -27,10 +27,10 @@ pub struct EnumOptionMap<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> EnumOptionMap<T, V, BitsetWord>
 {
   /// Creates a new empty map.
   pub fn new() -> Self {
@@ -249,10 +249,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + Debug,
-    V: Debug,
-    BitsetWord: BitsetWordTrait,
-  > Debug for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord> + Debug,
+  V: Debug,
+  BitsetWord: BitsetWordTrait,
+> Debug for EnumOptionMap<T, V, BitsetWord>
 {
   fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
     fmt.debug_map().entries(self.iter()).finish()
@@ -260,10 +260,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Default for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Default for EnumOptionMap<T, V, BitsetWord>
 {
   fn default() -> Self {
     EnumOptionMap::<T, V, BitsetWord>::new()
@@ -271,10 +271,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Drop for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Drop for EnumOptionMap<T, V, BitsetWord>
 {
   fn drop(&mut self) {
     self.clear()
@@ -282,10 +282,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V: PartialEq,
-    BitsetWord: BitsetWordTrait,
-  > PartialEq for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V: PartialEq,
+  BitsetWord: BitsetWordTrait,
+> PartialEq for EnumOptionMap<T, V, BitsetWord>
 {
   fn eq(&self, other: &Self) -> bool {
     for key in T::iter() {
@@ -299,18 +299,18 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V: Eq,
-    BitsetWord: BitsetWordTrait,
-  > Eq for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V: Eq,
+  BitsetWord: BitsetWordTrait,
+> Eq for EnumOptionMap<T, V, BitsetWord>
 {
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V: Hash,
-    BitsetWord: BitsetWordTrait,
-  > Hash for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V: Hash,
+  BitsetWord: BitsetWordTrait,
+> Hash for EnumOptionMap<T, V, BitsetWord>
 {
   fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
     for key in T::iter() {
@@ -320,10 +320,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::FromIterator<(T, V)> for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::FromIterator<(T, V)> for EnumOptionMap<T, V, BitsetWord>
 {
   fn from_iter<I: iter::IntoIterator<Item = (T, V)>>(iter: I) -> Self {
     let mut map = EnumOptionMap::<T, V, BitsetWord>::new();
@@ -335,10 +335,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::Extend<(T, V)> for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::Extend<(T, V)> for EnumOptionMap<T, V, BitsetWord>
 {
   fn extend<I: iter::IntoIterator<Item = (T, V)>>(&mut self, iter: I) {
     for (key, value) in iter {
@@ -348,11 +348,11 @@ impl<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::IntoIterator for &'a EnumOptionMap<T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::IntoIterator for &'a EnumOptionMap<T, V, BitsetWord>
 {
   type Item = (T, &'a V);
   type IntoIter = EnumOptionMapIter<'a, T, V, BitsetWord>;
@@ -364,11 +364,11 @@ impl<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::IntoIterator for &'a mut EnumOptionMap<T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::IntoIterator for &'a mut EnumOptionMap<T, V, BitsetWord>
 {
   type Item = (T, &'a mut V);
   type IntoIter = EnumOptionMapIterMut<'a, T, V, BitsetWord>;
@@ -380,10 +380,10 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::IntoIterator for EnumOptionMap<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::IntoIterator for EnumOptionMap<T, V, BitsetWord>
 {
   type Item = (T, V);
   type IntoIter = EnumOptionMapIntoIter<T, V, BitsetWord>;
@@ -412,10 +412,10 @@ pub struct EnumOptionMapIntoIter<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Iterator for EnumOptionMapIntoIter<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Iterator for EnumOptionMapIntoIter<T, V, BitsetWord>
 {
   type Item = (T, V);
 
@@ -434,18 +434,18 @@ impl<
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::FusedIterator for EnumOptionMapIntoIter<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::FusedIterator for EnumOptionMapIntoIter<T, V, BitsetWord>
 {
 }
 
 impl<
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Drop for EnumOptionMapIntoIter<T, V, BitsetWord>
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Drop for EnumOptionMapIntoIter<T, V, BitsetWord>
 {
   fn drop(&mut self) {
     // Drop the values that were not yielded; the validity cursor yields each
@@ -470,11 +470,11 @@ pub struct EnumOptionMapIter<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Iterator for EnumOptionMapIter<'a, T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Iterator for EnumOptionMapIter<'a, T, V, BitsetWord>
 {
   type Item = (T, &'a V);
 
@@ -492,11 +492,11 @@ impl<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::FusedIterator for EnumOptionMapIter<'a, T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::FusedIterator for EnumOptionMapIter<'a, T, V, BitsetWord>
 {
 }
 
@@ -512,11 +512,11 @@ pub struct EnumOptionMapIterMut<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > Iterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> Iterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
 {
   type Item = (T, &'a mut V);
 
@@ -533,10 +533,10 @@ impl<
 }
 
 impl<
-    'a,
-    T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
-    V,
-    BitsetWord: BitsetWordTrait,
-  > iter::FusedIterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
+  'a,
+  T: EnumArrayHelper<V> + EnumSetHelper<BitsetWord>,
+  V,
+  BitsetWord: BitsetWordTrait,
+> iter::FusedIterator for EnumOptionMapIterMut<'a, T, V, BitsetWord>
 {
 }

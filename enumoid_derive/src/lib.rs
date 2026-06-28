@@ -9,7 +9,7 @@
 //! # fn main() {}
 //! ```
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use quote::ToTokens;
 
 extern crate proc_macro;

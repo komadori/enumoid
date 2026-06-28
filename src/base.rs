@@ -76,12 +76,14 @@ impl<T: Enumoid> EnumSize<T> {
 
   #[inline]
   pub(crate) unsafe fn from_word_unchecked(value: T::Word) -> Self {
-    hint_assert!(
-      value <= T::SIZE_WORD,
-      "from_word_unchecked: Size out of bounds: {:?} > {:?}",
-      value,
-      T::SIZE_WORD
-    );
+    unsafe {
+      hint_assert!(
+        value <= T::SIZE_WORD,
+        "from_word_unchecked: Size out of bounds: {:?} > {:?}",
+        value,
+        T::SIZE_WORD
+      );
+    }
     EnumSize(value)
   }
 
@@ -323,12 +325,14 @@ impl<T: Enumoid> Hash for EnumIndex<T> {
 impl<T: Enumoid> EnumIndex<T> {
   #[inline]
   pub(crate) unsafe fn from_word_unchecked(value: T::Word) -> Self {
-    hint_assert!(
-      value < T::SIZE_WORD,
-      "from_word_unchecked: Index out of bounds: {:?} >= {:?}",
-      value,
-      T::SIZE_WORD
-    );
+    unsafe {
+      hint_assert!(
+        value < T::SIZE_WORD,
+        "from_word_unchecked: Index out of bounds: {:?} >= {:?}",
+        value,
+        T::SIZE_WORD
+      );
+    }
     EnumIndex(value)
   }
 

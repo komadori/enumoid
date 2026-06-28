@@ -1,10 +1,10 @@
+use crate::EnumIndex;
 use crate::base::EnumArrayHelper;
 use crate::base::EnumSetHelper;
 use crate::iter::EnumSliceIter;
 use crate::iter::EnumSliceIterMut;
 use crate::opt_map::EnumOptionMap;
 use crate::sub_base::RawSizeWord;
-use crate::EnumIndex;
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::Debug;
