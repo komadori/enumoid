@@ -256,7 +256,8 @@ impl<T: Enumoid> EnumSize<T> {
 
   #[inline]
   pub fn iter_until(&self, until: T) -> EnumoidIter<T> {
-    EnumSize::from_last(until).iter()
+    T::word_range(T::Word::ZERO, self.0.min(until.into_word().inc()))
+      .map(|w| unsafe { T::from_word_unchecked(w) })
   }
 
   #[inline]

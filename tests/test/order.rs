@@ -32,8 +32,39 @@ fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &[T]) {
     }
   }
 
-  // Test iterators
-  let full_size = EnumSize::<T>::FULL;
+  // Test iterators.
+  //
+  // The static `Enumoid::*` iterators behave like the equivalent `EnumSize`
+  // methods called on the full size. The `EnumSize` methods additionally clamp
+  // their range to the size they are called on. Both `*_until` variants are
+  // inclusive of `until`.
+
+  // Enumoid::iter
+  assert_eq!(
+    T::iter().collect::<Vec<_>>(),
+    values.to_vec(),
+    "Enumoid::iter()"
+  );
+
+  // Enumoid::iter_from
+  for (i, &from) in values.iter().enumerate() {
+    assert_eq!(
+      T::iter_from(from).collect::<Vec<_>>(),
+      values[i..].to_vec(),
+      "Enumoid::iter_from({from:?})"
+    );
+  }
+
+  // Enumoid::iter_until
+  for (j, &until) in values.iter().enumerate() {
+    assert_eq!(
+      T::iter_until(until).collect::<Vec<_>>(),
+      values[..=j].to_vec(),
+      "Enumoid::iter_until({until:?})"
+    );
+  }
+
+  // Enumoid::iter_from_until
   for (i, &from) in values.iter().enumerate() {
     for (j, &until) in values.iter().enumerate() {
       let expected: Vec<T> = if i <= j {
@@ -44,32 +75,64 @@ fn test_type<T: Enumoid + Copy + Debug + PartialEq>(values: &[T]) {
       assert_eq!(
         T::iter_from_until(from, until).collect::<Vec<_>>(),
         expected,
-        "Enumoid::iter_from_until({:?}, {:?})",
-        from,
-        until
+        "Enumoid::iter_from_until({from:?}, {until:?})"
       );
+    }
+  }
+
+  // The `EnumSize` methods are exercised across every size from EMPTY (0) up to
+  // FULL (SIZE), so that the size-clamping behaviour is covered too. `sizes[s]`
+  // is the `EnumSize` representing a size of `s`.
+  let sizes: Vec<EnumSize<T>> = (0..=values.len())
+    .map(|s| EnumSize::<T>::from_usize(s).unwrap())
+    .collect();
+  for (s, &size) in sizes.iter().enumerate() {
+    // EnumSize::iter
+    assert_eq!(
+      size.iter().collect::<Vec<_>>(),
+      values[..s].to_vec(),
+      "EnumSize({s})::iter()"
+    );
+
+    // EnumSize::iter_from
+    for (i, &from) in values.iter().enumerate() {
+      let expected: Vec<T> = if i < s {
+        values[i..s].to_vec()
+      } else {
+        Vec::new()
+      };
       assert_eq!(
-        full_size.iter_from_until(from, until).collect::<Vec<_>>(),
+        size.iter_from(from).collect::<Vec<_>>(),
         expected,
-        "EnumSize::iter_from_until({:?}, {:?})",
-        from,
-        until
+        "EnumSize({s})::iter_from({from:?})"
       );
-      let size_until = EnumSize::<T>::from_last(until);
+    }
+
+    // EnumSize::iter_until
+    for (j, &until) in values.iter().enumerate() {
+      let lim = (j + 1).min(s);
       assert_eq!(
-        size_until.iter_from(from).collect::<Vec<_>>(),
-        expected,
-        "EnumSize(size_until)::iter_from({:?}, {:?})",
-        from,
-        until
+        size.iter_until(until).collect::<Vec<_>>(),
+        values[..lim].to_vec(),
+        "EnumSize({s})::iter_until({until:?})"
       );
-      assert_eq!(
-        size_until.iter_from_until(from, until).collect::<Vec<_>>(),
-        expected,
-        "EnumSize(size_until)::iter_from_until({:?}, {:?})",
-        from,
-        until
-      );
+    }
+
+    // EnumSize::iter_from_until
+    for (i, &from) in values.iter().enumerate() {
+      for (j, &until) in values.iter().enumerate() {
+        let lim = (j + 1).min(s);
+        let expected: Vec<T> = if i < lim {
+          values[i..lim].to_vec()
+        } else {
+          Vec::new()
+        };
+        assert_eq!(
+          size.iter_from_until(from, until).collect::<Vec<_>>(),
+          expected,
+          "EnumSize({s})::iter_from_until({from:?}, {until:?})"
+        );
+      }
     }
   }
 }
