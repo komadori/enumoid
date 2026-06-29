@@ -18,6 +18,8 @@ extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
+mod generate;
+
 fn get_index_type(
   input: &syn::DeriveInput,
 ) -> Result<proc_macro2::TokenStream> {
@@ -291,6 +293,40 @@ pub fn derive_enumoid(
   input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
   match try_derive_enumoid(input) {
+    Ok(q) => q,
+    Err(e) => {
+      let msg = e.to_string();
+      quote! { compile_error!(#msg); }
+    }
+  }
+  .into()
+}
+
+/// Function-like macro which declares an enum with a contiguous range of
+/// numbered unit variants and a `#[derive(Enumoid)]` attribute.
+///
+/// ```ignore
+/// generate_enumoid!(Foo, Bar, 1..=3);
+/// ```
+///
+/// expands to:
+///
+/// ```ignore
+/// #[derive(Enumoid)]
+/// enum Foo {
+///   Bar1,
+///   Bar2,
+///   Bar3,
+/// }
+/// ```
+///
+/// Exclusive ranges (`1..4`) are also supported, but negative indices are not.
+/// Optional leading outer attributes and a visibility may precede the name.
+#[proc_macro]
+pub fn generate_enumoid(
+  input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+  match generate::try_generate_enumoid(input) {
     Ok(q) => q,
     Err(e) => {
       let msg = e.to_string();

@@ -330,6 +330,8 @@ order_tests!(seventeen, Seventeen);
 // handled.
 #[test]
 fn test_three_hundred() {
+  assert_eq!(ThreeHundred::FIRST, ThreeHundred::A1);
+  assert_eq!(ThreeHundred::LAST, ThreeHundred::A300);
   assert_eq!(ThreeHundred::SIZE, 300);
 }
 
