@@ -1,5 +1,30 @@
 # Changelog
 
+## Enumoid 0.5.0 (2026-06-29)
+
+### Added
+- Added generate_enumoid! macro.
+- Added EnumMap::set and set_by_index.
+- Added insert, remove, swap, and iterator methods to EnumOptionMap.
+- Added Debug and Serialize/Deserialize impls for EnumOptionMap.
+- Added EnumSet::new_all.
+- Added missing by_index versions of operations.
+- Added Extend and From/IntoIterator trait impls.
+
+### Changed
+- Set minimum supported Rust version to 1.85 and 2024 edition.
+- Changed EnumOptionMap::set to return the old value.
+- Changed EnumSet to iterate over set members rather than a map of bools.
+- Changed EnumSize to take self by value.
+- Replaced EnumVec::push with try_push.
+- Removed invalid ExactSizeIterator impls from EnumSet and EnumOptionMap.
+
+### Fixed
+- Fixed division by zero in EnumSet::all when there are no partial words.
+- Fixed EnumSet iterator skipping a word when the first is empty.
+- Fixed off-by-one error in EnumSize::iter_from_until.
+- Fixed EnumSize::iter_until ignoring the size.
+
 ## Enumoid 0.4.0 (2024-02-07)
 
 ### Added

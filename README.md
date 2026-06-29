@@ -7,7 +7,7 @@ This crate is a Rust library which can establish a mapping between the values th
 
 ```toml
 [dependencies]
-enumoid = "0.4"
+enumoid = "0.5"
 ```
 
 ## Deriving Enumoid
